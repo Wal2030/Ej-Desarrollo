@@ -1,57 +1,46 @@
-function guardar(){
+function guardar(event) {
+  event.preventDefault();
 
-    const myHeaders = new Headers();
-    myHeaders.append("Content-Type", "application/json");
-    event.preventDefault();
+  const nombre = document.getElementById("nombre").value;
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+  const password_confirmation = document.getElementById("password_confirmation").value;
 
-    let raw = JSON.stringify({
-      "nombre": document.getElementById("Nombre").value,
-      "email": document.getElementById("Correo Electronico").value,
-      "password": document.getElementById("Constraseña").value,
-      "password_confirmation": document.getElementById("Confirmar contraseña").value
-    });
+  const data = {
+    nombre,
+    email,
+    password,
+    password_confirmation
+  };
 
-    let requestOptions = {
-      method: "POST",
-      headers: myHeaders,
-      body: raw,
-      redirect: "follow"
-    };
-
-   fetch("https://ejemplodedsws.netlify.app/.netlify/functions/estudiantes", requestOptions)
-      .then((response) => response.text())
-      .then((result) => console.log(result))
-      .catch((error) => console.error(error));
+  fetch("/Prueba", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(data)
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      console.log(data);
+      listar(); // Refresca lista después de guardar
+    })
+    .catch((error) => console.error("Error:", error));
 }
 
-//Ejemplo cuando se devuelve algo
-function cargar(resultado){
-    let transformado = JSON.parse(resultado);
-    var salida="";
-    var elemento="";
-
-
-    for (let vc in transformado){
-        elemento = elemento + "<br>Nombres: " + transformado[vc].nombre;
-        elemento = elemento + "<br>Correo electrónico: " + transformado[vc].email;
-        salida = salida  + elemento + "<br><br>";
-    }
-
-    document.getElementById("rta").innerHTML = salida;
-
+function cargar(resultado) {
+  const lista = JSON.parse(resultado);
+  let salida = "";
+  lista.forEach((elemento, i) => {
+    salida += `<b>${i + 1}. Nombre:</b> ${elemento.nombre}<br>`;
+    salida += `<b>Email:</b> ${elemento.email}<br><br>`;
+  });
+  document.getElementById("rta").innerHTML = salida;
 }
 
-function listar(){
-    event.preventDefault();
-    const requestOptions = {
-      method: "GET",
-      redirect: "follow"
-    };
-    fetch("https://ejemplodedsws.netlify.app/.netlify/functions/estudiantes", requestOptions)
-      .then((response) =>
-        response.text())
-      .then((result) =>
-        cargar(result))
-      .catch((error) =>
-        console.error(error));
+function listar() {
+  fetch("/Prueba")
+    .then((res) => res.json())
+    .then((data) => cargar(JSON.stringify(data)))
+    .catch((error) => console.error("Error:", error));
 }
