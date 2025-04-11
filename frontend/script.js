@@ -51,7 +51,6 @@ const actualizarDatos = async (e) => {
   const email = document.getElementById("emailActualizar").value;
   const nombre = document.getElementById("nombreActualizar").value;
 
-  // 👇 Este log es para verificar que sí se esté leyendo bien el email
   console.log("Email enviado:", email);
 
   try {
@@ -60,16 +59,18 @@ const actualizarDatos = async (e) => {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email, nombre }), // asegúrate que `email` no sea undefined
+      body: JSON.stringify({ email, nombre }),
     });
 
     const datos = await respuesta.json();
     console.log("Respuesta del servidor:", datos);
 
-    if (respuesta.ok) {
-      alert("Datos actualizados correctamente");
+    if (datos.mensaje === "No se encontró ninguna empresa con ese correo") {
+      alert("⚠️ Ese correo no está registrado.");
+    } else if (respuesta.ok) {
+      alert("✅ Datos actualizados correctamente");
     } else {
-      alert(datos.mensaje || "Error al actualizar");
+      alert(datos.mensaje || "❌ Error al actualizar");
     }
 
   } catch (error) {
@@ -77,5 +78,6 @@ const actualizarDatos = async (e) => {
     alert("Error de conexión");
   }
 };
+
 
 
