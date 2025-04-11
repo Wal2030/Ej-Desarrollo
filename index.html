@@ -1,71 +1,34 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <script type="text/javascript" src="./frontend/script.js"></script>
+    <script type="text/javascript" src="./frontend/script.js" defer></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Red de conectividad digital</title>
 </head>
 <body>
     <h1>Registrar en la plataforma</h1>
-<div>
-    <form id="RegistroEmpresa">
-        <label for="nombre">Nombre:</label><br>
-        <input type="text" id="nombre" placeholder="Nombre" required><br><br>
-        <label for="email">Email:</label><br>
-        <input type="email" id="email" placeholder="Correo electrónico" required><br><br>
-        <label for="password">Contraseña:</label><br>
-        <input type="password" id="password" placeholder="Contraseña" required><br><br>
-        <label for="password_confirmation">Confirmar Contraseña:</label><br>
-        <input type="password" id="password_confirmation" placeholder="Confirmar contraseña" required><br>
-        <br>
-        <input type="submit" value="Registrarse">
-        <form id="RegistroEmpresa" onsubmit="guardar(event)"></form>
-      </form>
-</div>
-<h1>Consultar</h1>
-<div>
-    <form id="Preguntas">
-        <div>
-            <label for="empresa">Nombre de la Empresa:</label><br>
-            <input type="text" id="empresa" name="empresa" required><br><br>
+    <div>
+        <form id="RegistroEmpresa" onsubmit="guardar(event)">
+            <label for="nombre">Nombre:</label><br>
+            <input type="text" id="nombre" placeholder="Nombre" required><br><br>
 
-            <label for="tema">Tema de la Asesoría:</label><br>
-            <select id="tema" name="tema">
-            <option value="marketing">Marketing Digital</option>
-            <option value="ecommerce">Comercio Electrónico</option>
-            <option value="seguridad">Ciberseguridad</option>
-            <option value="tecnologia">Transformación Digital</option>
-            </select><br><br>
+            <label for="email">Email:</label><br>
+            <input type="email" id="email" placeholder="Correo electrónico" required><br><br>
 
-            <label for="fecha">Fecha deseada:</label><br>
-            <input type="date" id="fecha" name="fecha" required><br><br>
-            <label for="mensaje">Mensaje adicional:</label><br>
-            <textarea id="mensaje" name="mensaje" rows="4" cols="40"></textarea><br><br>
-            <input type="button" onclick="solicitarAsesoria()" value="Enviar Solicitud">
-        </div>
-    
-</form>
+            <label for="password">Contraseña:</label><br>
+            <input type="password" id="password" placeholder="Contraseña" required><br><br>
 
-        <p id="rta">Consultar:</p>
-        <input type="submit" onclick="listar()" value="Aceptar">
-    </form>
-</div>
-<h1>Editar</h1>
-<div>
-    <form id="">
-        <p id="rta">Consultar:</p>
-        <input type="submit" onclick="Editar()" value="Aceptar">
-    </form>
-</div>
+            <label for="password_confirmation">Confirmar Contraseña:</label><br>
+            <input type="password" id="password_confirmation" placeholder="Confirmar contraseña" required><br><br>
 
-<h1>Eliminar</h1>
-<div>
-    <form id="">
-        <p id="rta">Consultar:</p>
-        <input type="submit" onclick="Eliminar()" value="Aceptar">
-    </form>
-</div>
+            <input type="submit" value="Registrarse">
+        </form>
+    </div>
+
+    <br><hr>
+    <h2>Empresas Registradas</h2>
+    <p id="rta">Consultar:</p>
+    <button onclick="listar()">Listar Empresas</button>
 </body>
 </html>

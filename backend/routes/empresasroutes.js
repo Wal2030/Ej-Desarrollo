@@ -1,15 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const estudiantescontroller = require("../controllers/empresascontrollers.js");
+const empresascontrollers = require("../controllers/empresascontrollers");
 
-router.get("/",empresascontroller.consultar);
-router.post("/",empresascontroller.ingresar);
-
-/* Ejemplo con parámetros
-router.route("/:id")
-.get(estudiantescontroller.consultarDetalle)
-.put(estudiantescontroller.actualizar)
-.delete(estudiantescontroller.borrar);
-*/
+router.get("/", empresascontrollers.consultar);
+router.post("/", empresascontrollers.ingresar);
 
 module.exports = router;

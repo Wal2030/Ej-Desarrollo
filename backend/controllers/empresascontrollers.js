@@ -1,40 +1,17 @@
-/*
-const express = require("express");
-const router = express.Router();
-const estudiantescontroller = require("../controllers/estudiantescontrollers.js");
-router.get("/",estudiantescontroller.consultar);
-router.post("/",estudiantescontroller.ingresar);
-module.exports = router;
-*/
+// controllers/empresascontrollers.js
+let empresas = [];
 
-class EstudiantesController{
-    construct(){
-    }
-    consultar(req,res){
-        try{
-            let arreglo=[];
-            let myObj = {nombre: "Walter", email:"ejemplo@nose.com"};
-            let myObj2 = {nombre: "Danna",email:"222ejemplo@nose.com"};
+const ingresar = (req, res) => {
+  const { nombre, email, password, password_confirmation } = req.body;
+  empresas.push({ nombre, email });
+  res.json({ mensaje: "Empresa registrada correctamente" });
+};
 
-            arreglo.push (myObj);
-            arreglo.push (myObj2);
+const consultar = (req, res) => {
+  res.json(empresas);
+};
 
-            let myJSON = JSON.stringify(arreglo);
-
-            res.status(200).send (myJSON);
-        }catch (err){
-            res.status(500).send(err.message);
-        }
-    }
-    ingresar(req,res){
-        try{
-            const {nombre,email} = req.body;
-            console.log ("Nombres:" + nombre);
-            console.log ("email: "+ email);
-            res.status(200).send ("Funciono ok");
-        }catch (err){
-            res.status(500).send(err.message);
-        }
-    }
-}
-module.exports = new EstudiantesController();
+module.exports = {
+  ingresar,
+  consultar
+};
