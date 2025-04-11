@@ -48,4 +48,27 @@ const consultar = (req, res) => {
   res.json(empresas);
 };
 
-module.exports = { ingresar, consultar };
+const actualizar = (req, res) => {
+    const { email, nombre, password } = req.body;
+  
+    if (!email) {
+      return res.status(400).json({ mensaje: "Falta el email" });
+    }
+  
+    // Simulamos la búsqueda por email y actualización
+    const empresa = empresas.find(e => e.email === email);
+    if (!empresa) {
+      return res.status(404).json({ mensaje: "Empresa no encontrada" });
+    }
+  
+    if (nombre) empresa.nombre = nombre;
+    // Aquí podrías agregar lógica para actualizar password si lo guardas
+  
+    console.log("🛠️ Empresa actualizada:", empresa);
+  
+    res.json({ mensaje: "Datos actualizados", empresa });
+  };
+  
+  module.exports = { ingresar, consultar, actualizar };
+  
+

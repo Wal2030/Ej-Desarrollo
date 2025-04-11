@@ -31,5 +31,20 @@
   <button onclick="listar()">Listar Empresas</button>
   
   <script src="frontend/script.js" defer></script>
+
+
+  <h2>Actualizar Empresa</h2>
+  <form id="formActualizar" onsubmit="actualizarDatos(event)">
+    <label for="emailActualizar">Email (para buscar):</label><br>
+    <input type="email" id="emailActualizar" placeholder="Correo registrado" required><br><br>
+
+    <label for="nombreActualizar">Nuevo Nombre:</label><br>
+    <input type="text" id="nombreActualizar" placeholder="Nuevo nombre"><br><br>
+
+    <label for="passwordActualizar">Nueva Contraseña:</label><br>
+    <input type="password" id="passwordActualizar" placeholder="Nueva contraseña"><br><br>
+
+    <button type="submit">Actualizar</button>
+  </form>
 </body>
 </html>

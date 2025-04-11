@@ -44,3 +44,27 @@ function cargar(lista) {
   });
   document.getElementById("rta").innerHTML = salida;
 }
+function actualizarDatos() {
+  const datos = {
+    email: document.getElementById("email").value,
+    nombre: document.getElementById("nombre").value,
+    password: document.getElementById("password").value
+  };
+
+  fetch('/.netlify/functions/Prueba', {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(datos)
+  })
+  .then(res => res.json())
+  .then(data => {
+    console.log('Respuesta del servidor:', data);
+    alert('Datos actualizados correctamente');
+  })
+  .catch(err => {
+    console.error('Error:', err);
+  });
+}
+

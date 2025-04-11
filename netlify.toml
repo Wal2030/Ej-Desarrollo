@@ -6,3 +6,8 @@
   from = "/api/*"
   to = "/.netlify/functions/Prueba/:splat"
   status = 200
+
+[[redirects]]
+  from = "/actualizar"
+  to = "/.netlify/functions/Prueba"
+  status = 200
