@@ -1,43 +1,22 @@
-function guardar(event) {
-  event.preventDefault();
+async function guardar(e) {
+  e.preventDefault();
 
   const nombre = document.getElementById("nombre").value;
   const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
   const password_confirmation = document.getElementById("password_confirmation").value;
 
-  const data = { nombre, email, password, password_confirmation };
+  const datos = { nombre, email, password, password_confirmation };
+  console.log("Datos enviados: ", datos);
 
-  console.log("Datos enviados:", data); // Asegúrate que NO esté 'undefined'
-
-  fetch("/.netlify/functions/Prueba", {
+  const response = await fetch("/.netlify/functions/Prueba", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify(data)
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      alert(data.mensaje);
-      listar();
-    })
-    .catch((error) => console.error("Error:", error));
-}
-
-function listar() {
-  fetch("/.netlify/functions/Prueba")
-    .then((res) => res.json())
-    .then((data) => cargar(data))
-    .catch((error) => console.error("Error:", error));
-}
-
-function cargar(lista) {
-  let salida = "";
-  lista.forEach((elemento, i) => {
-    salida += `<b>${i + 1}:</b><br>`;
-    salida += `<b>Nombre:</b> ${elemento.nombre}<br>`;
-    salida += `<b>Email:</b> ${elemento.email}<br><br>`;
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(datos)
   });
-  document.getElementById("rta").innerHTML = salida;
+
+  const resultado = await response.json();
+  console.log("Respuesta del servidor:", resultado);
+
+  alert(resultado.mensaje);
 }

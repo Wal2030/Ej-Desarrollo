@@ -1,4 +1,3 @@
-// backend/routes/empresasroutes.js
 const express = require("express");
 const router = express.Router();
 const empresascontrollers = require("../controllers/empresascontrollers");
