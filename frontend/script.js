@@ -1,8 +1,8 @@
 function guardar(event) {
   event.preventDefault();
 
-  const nombre = document.getElementById("nombre").value.trim();
-  const email = document.getElementById("email").value.trim();
+  const nombre = document.getElementById("nombre").value;
+  const email = document.getElementById("email").value;
   const password = document.getElementById("password").value;
   const password_confirmation = document.getElementById("password_confirmation").value;
 
@@ -39,6 +39,3 @@ function cargar(lista) {
   });
   document.getElementById("rta").innerHTML = salida;
 }
-
-// Llamar al cargar la página
-document.addEventListener("DOMContentLoaded", listar);
