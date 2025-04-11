@@ -10,7 +10,7 @@ function guardar(event) {
 
   console.log("Datos enviados: ", datos);
 
-  fetch("https://retoevaluacion.netlify.app/.netlify/functions/Prueba/actualizar", {
+  fetch("https://retoevaluacion.netlify.app/.netlify/functions/Prueba", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -44,14 +44,16 @@ function cargar(lista) {
   });
   document.getElementById("rta").innerHTML = salida;
 }
-function actualizarDatos() {
+function actualizarDatos(event) {
+  event.preventDefault(); // ⬅️ Esto es clave
+
   const datos = {
-    email: document.getElementById("email").value,
-    nombre: document.getElementById("nombre").value,
-    password: document.getElementById("password").value
+    email: document.getElementById("emailActualizar").value,
+    nombre: document.getElementById("nombreActualizar").value,
+    password: document.getElementById("passwordActualizar").value
   };
 
-  fetch("https://retoevaluacion.netlify.app/.netlify/functions/Prueba", {
+  fetch("https://retoevaluacion.netlify.app/.netlify/functions/Prueba/actualizar", {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json'
