@@ -49,10 +49,22 @@ const consultar = (req, res) => {
 };
 
 const actualizar = (req, res) => {
-    const { email, nombre } = req.body;
+    let body = req.body;
+  
+
+    if (Buffer.isBuffer(body)) {
+      body = body.toString();
+      try {
+        body = JSON.parse(body);
+      } catch (error) {
+        return res.status(400).json({ mensaje: "Error al parsear el body", error: error.message });
+      }
+    }
+  
+    const { email, nombre } = body;
   
     if (!email) {
-      return res.status(400).json({ mensaje: "Falta el email" });
+      return res.status(400).json({ mensaje: "Falta el email", bodyRecibido: body });
     }
   
     const empresa = empresas.find(e => e.email === email);
