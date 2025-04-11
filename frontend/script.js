@@ -18,7 +18,7 @@ function guardar(event) {
     .then((res) => res.json())
     .then((data) => {
       alert(data.mensaje);
-      listar(); // Cargar la lista actualizada
+      listar(); // <-- asegúrate que esta función existe más abajo
     })
     .catch((error) => console.error("Error:", error));
 }
