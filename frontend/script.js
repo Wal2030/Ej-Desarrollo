@@ -10,7 +10,7 @@ function guardar(event) {
 
   console.log("Datos enviados: ", datos);
 
-  fetch("https://retoevaluacion.netlify.app/.netlify/functions/Prueba", {
+  fetch("https://retoevaluacion.netlify.app/.netlify/functions/Prueba/actualizar", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
