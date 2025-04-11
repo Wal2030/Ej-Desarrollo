@@ -1,22 +1,45 @@
-async function guardar(e) {
-  e.preventDefault();
+function guardar(event) {
+  event.preventDefault(); // 🚫 Esto evita que el formulario recargue la página
 
-  const nombre = document.getElementById("nombre").value;
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
-  const password_confirmation = document.getElementById("password_confirmation").value;
+  const datos = {
+    nombre: document.getElementById("nombre").value,
+    email: document.getElementById("email").value,
+    password: document.getElementById("password").value,
+    password_confirmation: document.getElementById("password_confirmation").value
+  };
 
-  const datos = { nombre, email, password, password_confirmation };
   console.log("Datos enviados: ", datos);
 
-  const response = await fetch("/.netlify/functions/Prueba", {
+  fetch("https://retoevaluacion.netlify.app/.netlify/functions/Prueba", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json"
+    },
     body: JSON.stringify(datos)
+  })
+    .then(response => response.json())
+    .then(data => {
+      console.log("Respuesta del servidor:", data);
+      alert(data.mensaje);
+    })
+    .catch(error => {
+      console.error("Error:", error);
+    });
+}
+
+function listar() {
+  fetch("/.netlify/functions/Prueba")
+    .then((res) => res.json())
+    .then((data) => cargar(data))
+    .catch((error) => console.error("Error:", error));
+}
+
+function cargar(lista) {
+  let salida = "";
+  lista.forEach((elemento, i) => {
+    salida += `<b>${i + 1}:</b><br>`;
+    salida += `<b>Nombre:</b> ${elemento.nombre}<br>`;
+    salida += `<b>Email:</b> ${elemento.email}<br><br>`;
   });
-
-  const resultado = await response.json();
-  console.log("Respuesta del servidor:", resultado);
-
-  alert(resultado.mensaje);
+  document.getElementById("rta").innerHTML = salida;
 }
