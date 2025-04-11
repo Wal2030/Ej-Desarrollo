@@ -1,36 +1,35 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <script src="./frontend/script.js" defer></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Red de conectividad digital</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registro Empresa</title>
 </head>
 <body>
-    <h1>Registrar en la plataforma</h1>
-    <div>
-        <form id="RegistroEmpresa" onsubmit="guardar(event)">
-
-            <label for="nombre">Nombre:</label><br>
-            <input type="text" id="nombre" placeholder="Nombre" required><br><br>
-
-            <label for="email">Email:</label><br>
-            <input type="email" id="email" placeholder="Correo electrónico" required><br><br>
-
-            <label for="password">Contraseña:</label><br>
-            <input type="password" id="password" placeholder="Contraseña" required><br><br>
-
-            <label for="password_confirmation">Confirmar Contraseña:</label><br>
-            <input type="password" id="password_confirmation" placeholder="Confirmar contraseña" required><br><br>
-
-            <input type="submit" value="Registrarse">
-        </form>
-    </div>
-
-
-    <br><hr>
-    <h2>Empresas Registradas</h2>
-    <p id="rta"></p>
-    <button onclick="listar()">Listar Empresas</button>
+  <h1>Registrar en la plataforma</h1>
+  <div>
+    <form id="RegistroEmpresa" onsubmit="guardar(event)">
+      <label for="nombre">Nombre:</label><br>
+      <input type="text" id="nombre" placeholder="Nombre" required><br><br>
+  
+      <label for="email">Email:</label><br>
+      <input type="email" id="email" placeholder="Correo electrónico" required><br><br>
+  
+      <label for="password">Contraseña:</label><br>
+      <input type="password" id="password" placeholder="Contraseña" required><br><br>
+  
+      <label for="password_confirmation">Confirmar Contraseña:</label><br>
+      <input type="password" id="password_confirmation" placeholder="Confirmar contraseña" required><br><br>
+  
+      <input type="submit" value="Registrarse">
+    </form>
+  </div>
+  
+  <br><hr>
+  <h2>Empresas Registradas</h2>
+  <p id="rta"></p>
+  <button onclick="listar()">Listar Empresas</button>
+  
+  <script src="frontend/script.js" defer></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 function guardar(event) {
-  event.preventDefault(); // 🚫 Esto evita que el formulario recargue la página
+  event.preventDefault(); // Evita que el formulario recargue la página
 
   const datos = {
     nombre: document.getElementById("nombre").value,
@@ -21,6 +21,7 @@ function guardar(event) {
     .then(data => {
       console.log("Respuesta del servidor:", data);
       alert(data.mensaje);
+      listar();
     })
     .catch(error => {
       console.error("Error:", error);
@@ -28,10 +29,10 @@ function guardar(event) {
 }
 
 function listar() {
-  fetch("/.netlify/functions/Prueba")
-    .then((res) => res.json())
-    .then((data) => cargar(data))
-    .catch((error) => console.error("Error:", error));
+  fetch("https://retoevaluacion.netlify.app/.netlify/functions/Prueba")
+    .then(response => response.json())
+    .then(data => cargar(data))
+    .catch(error => console.error("Error:", error));
 }
 
 function cargar(lista) {

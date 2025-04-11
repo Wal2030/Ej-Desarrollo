@@ -8,8 +8,7 @@ const empresasroutes = require("../../backend/routes/empresasroutes");
 const app = express();
 
 app.use(cors());
-app.use(bodyParser.json()); // 👈 añade esto
-// app.use(express.json()); // Puedes comentar este si usas body-parser
+app.use(bodyParser.json()); // Esto se encarga de parsear el JSON del body
 
 app.use("/.netlify/functions/Prueba", empresasroutes);
 
