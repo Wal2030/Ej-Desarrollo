@@ -1,8 +1,8 @@
 function guardar(event) {
   event.preventDefault();
 
-  const nombre = document.getElementById("nombre").value;
-  const email = document.getElementById("email").value;
+  const nombre = document.getElementById("nombre").value.trim();
+  const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
   const password_confirmation = document.getElementById("password_confirmation").value;
 
@@ -18,7 +18,7 @@ function guardar(event) {
     .then((res) => res.json())
     .then((data) => {
       alert(data.mensaje);
-      listar(); // <-- asegúrate que esta función existe más abajo
+      listar();
     })
     .catch((error) => console.error("Error:", error));
 }
@@ -39,3 +39,6 @@ function cargar(lista) {
   });
   document.getElementById("rta").innerHTML = salida;
 }
+
+// Llamar al cargar la página
+document.addEventListener("DOMContentLoaded", listar);
