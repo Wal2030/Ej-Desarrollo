@@ -51,7 +51,7 @@ function actualizarDatos() {
     password: document.getElementById("password").value
   };
 
-  fetch('/.netlify/functions/Prueba', {
+  fetch("https://retoevaluacion.netlify.app/.netlify/functions/Prueba", {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json'
