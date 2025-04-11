@@ -8,6 +8,8 @@ function guardar(event) {
 
   const data = { nombre, email, password, password_confirmation };
 
+  console.log("Datos enviados:", data); // Asegúrate que NO esté 'undefined'
+
   fetch("/.netlify/functions/Prueba", {
     method: "POST",
     headers: {
