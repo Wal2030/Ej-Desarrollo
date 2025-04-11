@@ -3,7 +3,16 @@ let empresas = [];
 
 const ingresar = (req, res) => {
     console.log("📩 Body recibido:", req.body); // Útil para depurar
-  
+    let body = req.body;
+
+    // A veces Netlify lo manda como string (cuando se usa serverless)
+    if (typeof body === "string") {
+      try {
+        body = JSON.parse(body);
+      } catch (e) {
+        return res.status(400).json({ mensaje: "Error al parsear el body", error: e.message });
+      }
+    }
     const { nombre, email, password, password_confirmation } = req.body;
   
     // 1. Validar campos faltantes
