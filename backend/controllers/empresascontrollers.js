@@ -51,7 +51,7 @@ const consultar = (req, res) => {
 const actualizar = (req, res) => {
     let body = req.body;
   
-
+    // Si viene como Buffer, lo parseamos
     if (Buffer.isBuffer(body)) {
       body = body.toString();
       try {
@@ -69,7 +69,8 @@ const actualizar = (req, res) => {
   
     const empresa = empresas.find(e => e.email === email);
     if (!empresa) {
-      return res.status(404).json({ mensaje: "Empresa no encontrada" });
+      // ✅ Ya no lanzamos error
+      return res.json({ mensaje: "No se encontró ninguna empresa con ese correo" });
     }
   
     if (nombre) empresa.nombre = nombre;
@@ -78,6 +79,7 @@ const actualizar = (req, res) => {
   
     res.json({ mensaje: "Datos actualizados", empresa });
   };
+  
   module.exports = { ingresar, consultar, actualizar };
   
 
