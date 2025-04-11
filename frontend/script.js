@@ -44,29 +44,38 @@ function cargar(lista) {
   });
   document.getElementById("rta").innerHTML = salida;
 }
-function actualizarDatos(event) {
-  event.preventDefault(); // ⬅️ Esto es clave
 
-  const datos = {
-    email: document.getElementById("emailActualizar").value,
-    nombre: document.getElementById("nombreActualizar").value,
-    password: document.getElementById("passwordActualizar").value
-  };
+const actualizarDatos = async (e) => {
+  e.preventDefault();
 
-  fetch("https://retoevaluacion.netlify.app/.netlify/functions/Prueba/actualizar", {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(datos)
-  })
-  .then(res => res.json())
-  .then(data => {
-    console.log('Respuesta del servidor:', data);
-    alert('Datos actualizados correctamente');
-  })
-  .catch(err => {
-    console.error('Error:', err);
-  });
-}
+  const email = document.getElementById("emailActualizar").value;
+  const nombre = document.getElementById("nombreActualizar").value;
+
+  // 👇 Este log es para verificar que sí se esté leyendo bien el email
+  console.log("Email enviado:", email);
+
+  try {
+    const respuesta = await fetch("https://retoevaluacion.netlify.app/.netlify/functions/Prueba/actualizar", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, nombre }), // asegúrate que `email` no sea undefined
+    });
+
+    const datos = await respuesta.json();
+    console.log("Respuesta del servidor:", datos);
+
+    if (respuesta.ok) {
+      alert("Datos actualizados correctamente");
+    } else {
+      alert(datos.mensaje || "Error al actualizar");
+    }
+
+  } catch (error) {
+    console.error("Error al actualizar:", error);
+    alert("Error de conexión");
+  }
+};
+
 
