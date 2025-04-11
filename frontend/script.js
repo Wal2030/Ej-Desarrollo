@@ -8,7 +8,7 @@ function guardar(event) {
 
   const data = { nombre, email, password, password_confirmation };
 
-  fetch("http://localhost:3000/estudiantes", {
+  fetch("/.netlify/functions/Prueba", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -17,14 +17,14 @@ function guardar(event) {
   })
     .then((res) => res.json())
     .then((data) => {
-      alert("Registro exitoso");
+      alert(data.mensaje);
       listar(); // Cargar la lista actualizada
     })
     .catch((error) => console.error("Error:", error));
 }
 
 function listar() {
-  fetch("http://localhost:3000/estudiantes") // Asegúrate de que esta ruta existe en tu backend
+  fetch("/.netlify/functions/Prueba")
     .then((res) => res.json())
     .then((data) => cargar(data))
     .catch((error) => console.error("Error:", error));
