@@ -1,5 +1,5 @@
 function guardar(event) {
-  event.preventDefault(); // Evita que el formulario recargue la página
+  event.preventDefault();
 
   const datos = {
     nombre: document.getElementById("nombre").value,
@@ -38,11 +38,10 @@ function listar() {
 function cargar(lista) {
   let salida = "";
   lista.forEach((elemento, i) => {
-    salida += `<b>${i + 1}:</b><br>`;
-    salida += `<b>Nombre:</b> ${elemento.nombre}<br>`;
+    salida += `<b>Nombre de la empresa:</b> ${elemento.nombre}<br>`;
     salida += `<b>Email:</b> ${elemento.email}<br>`;
-    salida += `<button onclick="rellenarFormulario('${elemento.email}', '${elemento.nombre}')">✏️ Editar</button> `;
-    salida += `<button onclick="eliminar('${elemento.email}')">🗑️ Eliminar</button><br><br>`;
+    salida += `<button onclick="rellenarFormulario('${elemento.email}', '${elemento.nombre}')">Editar Empresa</button> `;
+    salida += `<button onclick="eliminar('${elemento.email}')">Eliminar Empresa</button><br><br>`;
   });
   document.getElementById("rta").innerHTML = salida;
 }
@@ -66,12 +65,12 @@ function eliminar(email) {
   })
     .then(response => response.json())
     .then(data => {
-      alert(data.mensaje || "Registro eliminado correctamente");
-      listar(); // Recargar lista después de eliminar
+      alert(data.mensaje || "Registro eliminado");
+      listar(); 
     })
     .catch(error => {
       console.error("Error al eliminar:", error);
-      alert("❌ Error al eliminar");
+      alert("Error al eliminar la empresa");
     });
 }
 
@@ -96,11 +95,11 @@ const actualizarDatos = async (e) => {
     console.log("Respuesta del servidor:", datos);
 
     if (datos.mensaje === "No se encontró ninguna empresa con ese correo") {
-      alert("⚠️ Ese correo no está registrado.");
+      alert("El correo no está registrado.");
     } else if (respuesta.ok) {
-      alert("✅ Datos actualizados correctamente");
+      alert("Datos actualizados");
     } else {
-      alert(datos.mensaje || "❌ Error al actualizar");
+      alert(datos.mensaje || "Error al actualizar los datos");
     }
 
   } catch (error) {

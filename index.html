@@ -3,42 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="frontend/script.js" defer></script>
   <title>Registro Empresa</title>
+  <!-- Se utiliza booststrap para un diseño simple solo por este momento-->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .btn-container {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 30px;
+    }
+  </style>
 </head>
-<body>
-  <h1>Registrar en la plataforma</h1>
-  <div>
+<body class="container mt-5">
+
+  <h1 class="mb-4">Registrar en la plataforma</h1>
+  <div class="card p-4 shadow-sm mb-4">
     <form id="RegistroEmpresa" onsubmit="guardar(event)">
-      <label for="nombre">Nombre:</label><br>
-      <input type="text" id="nombre" placeholder="Nombre" required><br><br>
-  
-      <label for="email">Email:</label><br>
-      <input type="email" id="email" placeholder="Correo electrónico" required><br><br>
-  
-      <label for="password">Contraseña:</label><br>
-      <input type="password" id="password" placeholder="Contraseña" required><br><br>
-  
-      <label for="password_confirmation">Confirmar Contraseña:</label><br>
-      <input type="password" id="password_confirmation" placeholder="Confirmar contraseña" required><br><br>
-  
-      <input type="submit" value="Registrarse">
+      <div class="mb-3">
+        <label for="nombre" class="form-label">Nombre</label>
+        <input type="text" id="nombre" class="form-control" placeholder="Nombre" required>
+      </div>
+      <div class="mb-3">
+        <label for="email" class="form-label">Correo electrónico</label>
+        <input type="email" id="email" class="form-control" placeholder="Correo electrónico" required>
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">Contraseña</label>
+        <input type="password" id="password" class="form-control" placeholder="Contraseña" required>
+      </div>
+      <div class="mb-3">
+        <label for="password_confirmation" class="form-label">Confirmar contraseña</label>
+        <input type="password" id="password_confirmation" class="form-control" placeholder="Confirmar contraseña" required>
+      </div>
+      <div class="btn-container">
+        <button type="submit" class="btn btn-primary">Registrarse</button>
+      </div>
     </form>
   </div>
-  
-  <br><hr>
   <h2>Empresas Registradas</h2>
   <p id="rta"></p>
-  <button onclick="listar()">Listar Empresas</button>
-  
-  <script src="frontend/script.js" defer></script>
-
-
+  <button onclick="listar()" class="btn btn-secondary mb-4">Listar Empresas</button>
   <h2>Actualizar Empresa</h2>
-  <form onsubmit="actualizarDatos(event)">
-    <input type="email" id="emailActualizar" placeholder="Correo electrónico" required />
-    <input type="text" id="nombreActualizar" placeholder="Nombre nuevo" required />
-    <button type="submit">Actualizar</button>
+  <form onsubmit="actualizarDatos(event)" class="mb-5">
+    <input type="email" id="emailActualizar" class="form-control mb-2" placeholder="Correo electrónico" required readonly />
+    <input type="text" id="nombreActualizar" class="form-control mb-2" placeholder="Nombre nuevo" required />
+    <button type="submit" class="btn btn-warning">Actualizar</button>
   </form>
-  <br>
 </body>
 </html>
