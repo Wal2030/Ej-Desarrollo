@@ -98,6 +98,7 @@ const actualizarDatos = async (e) => {
       alert("El correo no está registrado.");
     } else if (respuesta.ok) {
       alert("Datos actualizados");
+      listar();
     } else {
       alert(datos.mensaje || "Error al actualizar los datos");
     }
