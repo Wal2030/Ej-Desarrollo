@@ -52,6 +52,29 @@ function rellenarFormulario(email, nombre) {
   document.getElementById("nombreActualizar").value = nombre;
 }
 
+function eliminar(email) {
+  if (!confirm(`¿Estás seguro de eliminar el registro con email: ${email}?`)) {
+    return;
+  }
+
+  fetch("https://retoevaluacion.netlify.app/.netlify/functions/Prueba/eliminar", {
+    method: "DELETE",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ email })
+  })
+    .then(response => response.json())
+    .then(data => {
+      alert(data.mensaje || "Registro eliminado correctamente");
+      listar(); // Recargar lista después de eliminar
+    })
+    .catch(error => {
+      console.error("Error al eliminar:", error);
+      alert("❌ Error al eliminar");
+    });
+}
+
 const actualizarDatos = async (e) => {
   e.preventDefault();
 

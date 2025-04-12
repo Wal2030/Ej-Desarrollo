@@ -79,7 +79,36 @@ const actualizar = (req, res) => {
   
     res.json({ mensaje: "Datos actualizados", empresa });
   };
+  const eliminar = (req, res) => {
+    let body = req.body;
   
-  module.exports = { ingresar, consultar, actualizar };
+    if (Buffer.isBuffer(body)) {
+      body = body.toString();
+      try {
+        body = JSON.parse(body);
+      } catch (error) {
+        return res.status(400).json({ mensaje: "Error al parsear el body", error: error.message });
+      }
+    }
+  
+    const { email } = body;
+  
+    if (!email) {
+      return res.status(400).json({ mensaje: "Falta el email para eliminar" });
+    }
+  
+    const indice = empresas.findIndex(e => e.email === email);
+    if (indice === -1) {
+      return res.json({ mensaje: "No se encontró ninguna empresa con ese correo" });
+    }
+  
+    empresas.splice(indice, 1);
+    console.log(`🗑️ Empresa con email ${email} eliminada`);
+  
+    res.json({ mensaje: "Empresa eliminada correctamente" });
+  };
+  
+  
+  module.exports = { ingresar, consultar, actualizar, eliminar };
   
 
