@@ -40,9 +40,16 @@ function cargar(lista) {
   lista.forEach((elemento, i) => {
     salida += `<b>${i + 1}:</b><br>`;
     salida += `<b>Nombre:</b> ${elemento.nombre}<br>`;
-    salida += `<b>Email:</b> ${elemento.email}<br><br>`;
+    salida += `<b>Email:</b> ${elemento.email}<br>`;
+    salida += `<button onclick="rellenarFormulario('${elemento.email}', '${elemento.nombre}')">✏️ Editar</button> `;
+    salida += `<button onclick="eliminar('${elemento.email}')">🗑️ Eliminar</button><br><br>`;
   });
   document.getElementById("rta").innerHTML = salida;
+}
+
+function rellenarFormulario(email, nombre) {
+  document.getElementById("emailActualizar").value = email;
+  document.getElementById("nombreActualizar").value = nombre;
 }
 
 const actualizarDatos = async (e) => {
