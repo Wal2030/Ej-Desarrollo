@@ -10,6 +10,6 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json()); 
 
-app.use("/.netlify/functions/Prueba", empresasroutes);
+app.use("/", empresasroutes);
 
 module.exports.handler = serverless(app);
