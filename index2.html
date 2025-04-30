@@ -13,7 +13,7 @@
     document.getElementById('consultar').addEventListener('click', async () => {
       const userId = 'users123'; // Reemplaza con el ID del documento que agregaste
       try {
-        const response = await fetch(`https://retoevaluacion.netlify.app/.netlify/functions/Prueba${userId}`);
+        const response = await fetch(`https://retoevaluacion.netlify.app/.netlify/functions/Prueba?id=${userId}`);
         if (!response.ok) {
           throw new Error(`Error: ${response.status}`);
         }
