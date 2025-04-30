@@ -100,8 +100,40 @@ const actualizar = (req, res) => {
   
     res.json({ mensaje: "Empresa eliminada" });
   };
+
+  const admin = require("firebase-admin");
+  const db = admin.firestore();
+  
+  const getUser = async (req, res) => {
+    const { id } = req.query;
+  
+    if (!id) {
+      return res.status(400).json({ mensaje: "Falta el ID del usuario" });
+    }
+  
+    // Buscar primero en el arreglo local
+    const empresa = empresas.find(e => e.email === id || e.nombre === id);
+  
+    if (empresa) {
+      return res.json({ fuente: "local", ...empresa });
+    }
+  
+    // Si no está localmente, buscar en Firebase
+    try {
+      const docRef = db.collection("users").doc(id);
+      const doc = await docRef.get();
+  
+      if (!doc.exists) {
+        return res.status(404).json({ mensaje: "Usuario no encontrado ni en local ni en Firebase" });
+      }
+  
+      return res.json({ fuente: "firebase", id: doc.id, ...doc.data() });
+    } catch (error) {
+      return res.status(500).json({ mensaje: "Error al obtener el usuario desde Firebase", error: error.message });
+    }
+  };
   
   
-  module.exports = { ingresar, consultar, actualizar, eliminar };
+  module.exports = { ingresar, consultar, actualizar, eliminar, getUser  };
   
 
