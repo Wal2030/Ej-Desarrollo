@@ -3,10 +3,14 @@
   "version": "1.0.0",
   "description": "Sistema de Evaluación de Proyectos",
   "main": "index.js",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=10.0.0"
+  },
   "scripts": {
     "dev": "netlify dev",
     "build": "npm run build:frontend",
-    "build:frontend": "cp -r frontend/* dist/",
+    "build:frontend": "if not exist dist mkdir dist && xcopy /E /I /Y frontend dist",
     "start": "node index.js"
   },
   "keywords": [],
@@ -16,8 +20,8 @@
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
-    "express": "^5.1.0",
-    "firebase-admin": "^13.3.0",
+    "express": "^4.18.2",
+    "firebase-admin": "^11.11.1",
     "serverless-http": "^3.2.0",
     "uuid": "^9.0.0"
   },

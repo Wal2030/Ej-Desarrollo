@@ -3,6 +3,10 @@
   publish = "frontend"
   functions = "netlify/functions"
 
+[build.environment]
+  NODE_VERSION = "18.19.0"
+  NPM_VERSION = "10.2.3"
+
 [dev]
   command = "npm run dev"
   port = 8888
