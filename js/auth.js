@@ -1,34 +1,137 @@
+// Referencias a elementos del DOM
+const loginForm = document.getElementById('loginForm');
+const alertaError = document.getElementById('alertaError');
+const alertaExito = document.getElementById('alertaExito');
+
 // Función para iniciar sesión
 async function iniciarSesion(event) {
     event.preventDefault();
+    
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
-    const errorMessage = document.getElementById('errorMessage');
 
     try {
         const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        const user = userCredential.user;
         
-        // Obtener datos adicionales del usuario
-        const userDoc = await db.collection('users').doc(user.uid).get();
+        // Mostrar mensaje de éxito
+        mostrarAlerta('alertaExito', '¡Inicio de sesión exitoso! Redirigiendo...');
+        
+        // Obtener el rol del usuario
+        const userDoc = await db.collection('users').doc(userCredential.user.uid).get();
         const userData = userDoc.data();
 
-        // Guardar rol en localStorage
-        localStorage.setItem('userRole', userData.role);
-        
         // Redirigir según el rol
-        if (userData.role === 'empresa') {
-            window.location.href = '/dashboard-empresa.html';
-        } else if (userData.role === 'cliente') {
-            window.location.href = '/dashboard-cliente.html';
-        } else {
-            window.location.href = '/';
-        }
+        setTimeout(() => {
+            if (userData.role === 'empresa') {
+                window.location.href = '/dashboard-empresa.html';
+            } else if (userData.role === 'cliente') {
+                window.location.href = '/dashboard-cliente.html';
+            } else if (userData.role === 'admin') {
+                window.location.href = '/dashboard-admin.html';
+            } else {
+                window.location.href = '/';
+            }
+        }, 1500);
+
     } catch (error) {
-        errorMessage.textContent = 'Error al iniciar sesión: ' + error.message;
-        errorMessage.classList.remove('d-none');
+        let mensajeError = 'Error al iniciar sesión. Por favor, intenta de nuevo.';
+        
+        switch (error.code) {
+            case 'auth/user-not-found':
+                mensajeError = 'No existe una cuenta con este correo electrónico.';
+                break;
+            case 'auth/wrong-password':
+                mensajeError = 'Contraseña incorrecta.';
+                break;
+            case 'auth/invalid-email':
+                mensajeError = 'Correo electrónico inválido.';
+                break;
+            case 'auth/user-disabled':
+                mensajeError = 'Esta cuenta ha sido deshabilitada.';
+                break;
+        }
+        
+        mostrarAlerta('alertaError', mensajeError);
     }
 }
+
+// Función para iniciar sesión con Google
+async function iniciarSesionGoogle() {
+    try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        const result = await auth.signInWithPopup(provider);
+        
+        // Verificar si el usuario ya existe en la base de datos
+        const userDoc = await db.collection('users').doc(result.user.uid).get();
+        
+        if (!userDoc.exists) {
+            // Si es un nuevo usuario, redirigir a la página de selección de rol
+            window.location.href = '/seleccionar-rol.html';
+        } else {
+            // Si ya existe, redirigir según su rol
+            const userData = userDoc.data();
+            if (userData.role === 'empresa') {
+                window.location.href = '/dashboard-empresa.html';
+            } else if (userData.role === 'cliente') {
+                window.location.href = '/dashboard-cliente.html';
+            } else if (userData.role === 'admin') {
+                window.location.href = '/dashboard-admin.html';
+            }
+        }
+    } catch (error) {
+        mostrarAlerta('alertaError', 'Error al iniciar sesión con Google.');
+        console.error('Error:', error);
+    }
+}
+
+// Función para mostrar/ocultar contraseña
+function togglePassword() {
+    const passwordInput = document.getElementById('password');
+    const toggleButton = passwordInput.nextElementSibling;
+    const icon = toggleButton.querySelector('i');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        passwordInput.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+// Función para mostrar alertas
+function mostrarAlerta(tipo, mensaje) {
+    const alerta = document.getElementById(tipo);
+    alerta.textContent = mensaje;
+    alerta.classList.remove('d-none');
+    
+    // Ocultar la alerta después de 5 segundos
+    setTimeout(() => {
+        alerta.classList.add('d-none');
+    }, 5000);
+}
+
+// Verificar estado de autenticación
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        const userDoc = await db.collection('users').doc(user.uid).get();
+        if (userDoc.exists) {
+            const userData = userDoc.data();
+            // Redirigir si ya está autenticado y está en la página de login
+            if (window.location.pathname === '/login.html') {
+                if (userData.role === 'empresa') {
+                    window.location.href = '/dashboard-empresa.html';
+                } else if (userData.role === 'cliente') {
+                    window.location.href = '/dashboard-cliente.html';
+                } else if (userData.role === 'admin') {
+                    window.location.href = '/dashboard-admin.html';
+                }
+            }
+        }
+    }
+});
 
 // Función para registrar cliente
 async function registrarCliente(event) {
@@ -140,34 +243,4 @@ function cerrarSesion() {
     }).catch((error) => {
         console.error('Error al cerrar sesión:', error);
     });
-}
-
-// Observador del estado de autenticación
-auth.onAuthStateChanged(async (user) => {
-    const loginNav = document.getElementById('btnLoginNav');
-    const registroNav = document.getElementById('btnRegistroNav');
-    const perfilNav = document.getElementById('btnPerfil');
-    const cerrarSesionNav = document.getElementById('btnCerrarSesion');
-
-    if (user) {
-        // Usuario autenticado
-        loginNav?.classList.add('d-none');
-        registroNav?.classList.add('d-none');
-        perfilNav?.classList.remove('d-none');
-        cerrarSesionNav?.classList.remove('d-none');
-
-        // Obtener rol del usuario
-        const userDoc = await db.collection('users').doc(user.uid).get();
-        if (userDoc.exists) {
-            const userData = userDoc.data();
-            localStorage.setItem('userRole', userData.role);
-        }
-    } else {
-        // Usuario no autenticado
-        loginNav?.classList.remove('d-none');
-        registroNav?.classList.remove('d-none');
-        perfilNav?.classList.add('d-none');
-        cerrarSesionNav?.classList.add('d-none');
-        localStorage.removeItem('userRole');
-    }
-}); 
+} 
