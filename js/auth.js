@@ -145,25 +145,36 @@ async function registrarCliente(event) {
     const nombre = getElement('nombreCliente').value;
 
     try {
+        console.log('Iniciando registro...', { email, nombre });
+        
         // Crear usuario en Authentication
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
         const user = userCredential.user;
+        
+        console.log('Usuario creado:', user.uid);
 
         // Guardar datos adicionales en Firestore
-        await db.collection('users').doc(user.uid).set({
+        const userData = {
             uid: user.uid,
             email: email,
             nombre: nombre,
             role: 'cliente',
             createdAt: new Date().toISOString(),
             status: 'active'
-        });
+        };
+        
+        console.log('Guardando datos en Firestore:', userData);
+        
+        await firebase.firestore().collection('users').doc(user.uid).set(userData);
+        
+        console.log('Datos guardados en Firestore');
 
         // Actualizar perfil
         await user.updateProfile({
             displayName: nombre
         });
 
+        console.log('Perfil actualizado');
         mostrarAlerta('alertaExito', '¡Registro exitoso! Redirigiendo...');
         
         // Redirigir al dashboard
@@ -171,29 +182,34 @@ async function registrarCliente(event) {
             window.location.href = '/dashboard-cliente.html';
         }, 1500);
     } catch (error) {
-        console.error('Error de registro:', error);
+        console.error('Error detallado:', error);
         let mensajeError = 'Error al registrar. Por favor, intenta de nuevo.';
         
-        switch (error.code) {
-            case 'auth/email-already-in-use':
-                mensajeError = 'Ya existe una cuenta con este correo electrónico.';
-                break;
-            case 'auth/invalid-email':
-                mensajeError = 'Correo electrónico inválido.';
-                break;
-            case 'auth/operation-not-allowed':
-                mensajeError = 'El registro de usuarios está deshabilitado temporalmente.';
-                break;
-            case 'auth/weak-password':
-                mensajeError = 'La contraseña debe tener al menos 6 caracteres.';
-                break;
-            case 'auth/internal-error':
-                mensajeError = 'Error interno. Por favor, verifica tu conexión a internet y vuelve a intentarlo.';
-                break;
-            default:
-                mensajeError = `Error: ${error.message}`;
+        if (error.code) {
+            switch (error.code) {
+                case 'auth/email-already-in-use':
+                    mensajeError = 'Ya existe una cuenta con este correo electrónico.';
+                    break;
+                case 'auth/invalid-email':
+                    mensajeError = 'Correo electrónico inválido.';
+                    break;
+                case 'auth/operation-not-allowed':
+                    mensajeError = 'El registro de usuarios está deshabilitado temporalmente.';
+                    break;
+                case 'auth/weak-password':
+                    mensajeError = 'La contraseña debe tener al menos 6 caracteres.';
+                    break;
+                case 'auth/internal-error':
+                    mensajeError = 'Error interno. Detalles: ' + error.message;
+                    break;
+                default:
+                    mensajeError = `Error: ${error.message}`;
+            }
+        } else {
+            mensajeError = `Error inesperado: ${error.message}`;
         }
         
+        console.error('Mensaje de error:', mensajeError);
         mostrarAlerta('alertaError', mensajeError);
     }
 }
