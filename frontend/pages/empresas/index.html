@@ -8,33 +8,40 @@
     <link rel="stylesheet" href="/assets/css/styles.css">
 </head>
 <body>
-    <div class="container mt-4">
-        <div class="row mb-4">
-            <div class="col">
-                <h1>Gestión de Empresas</h1>
+    <div class="container">
+        <h1 class="mb-4">Gestión de Empresas</h1>
+        <div class="row">
+            <div class="col-md-12 mb-4">
+                <button class="btn btn-primary" onclick="mostrarFormularioEmpresa()">Nueva Empresa</button>
             </div>
-            <div class="col text-end">
-                <a href="/empresas/crear" class="btn btn-primary">Nueva Empresa</a>
+        </div>
+        
+        <div id="formularioEmpresa" style="display: none;" class="mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Registrar Nueva Empresa</h5>
+                    <form id="formEmpresa" onsubmit="guardarEmpresa(event)">
+                        <div class="mb-3">
+                            <label for="nombre" class="form-label">Nombre de la Empresa</label>
+                            <input type="text" class="form-control" id="nombre" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="rut" class="form-label">RUT</label>
+                            <input type="text" class="form-control" id="rut" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="descripcion" class="form-label">Descripción</label>
+                            <textarea class="form-control" id="descripcion" rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success">Guardar</button>
+                        <button type="button" class="btn btn-secondary" onclick="ocultarFormularioEmpresa()">Cancelar</button>
+                    </form>
+                </div>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Email</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody id="empresasTableBody">
-                            <!-- Los datos se cargarán dinámicamente -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
+        <div class="row" id="listaEmpresas">
+            <!-- Las empresas se cargarán aquí dinámicamente -->
         </div>
     </div>
 
@@ -60,25 +67,75 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="/assets/js/main.js"></script>
     <script>
-        // Cargar empresas al iniciar la página
-        document.addEventListener('DOMContentLoaded', async () => {
+        function mostrarFormularioEmpresa() {
+            document.getElementById('formularioEmpresa').style.display = 'block';
+        }
+
+        function ocultarFormularioEmpresa() {
+            document.getElementById('formularioEmpresa').style.display = 'none';
+        }
+
+        async function guardarEmpresa(event) {
+            event.preventDefault();
+            
+            const empresa = {
+                nombre: document.getElementById('nombre').value,
+                rut: document.getElementById('rut').value,
+                descripcion: document.getElementById('descripcion').value
+            };
+
             try {
-                const empresas = await fetchAPI('/empresas');
-                const tbody = document.getElementById('empresasTableBody');
-                tbody.innerHTML = empresas.map(empresa => `
-                    <tr>
-                        <td>${empresa.nombre}</td>
-                        <td>${empresa.email}</td>
-                        <td>
-                            <a href="/empresas/editar/${empresa.id}" class="btn btn-sm btn-warning">Editar</a>
-                            <button onclick="confirmarEliminar('${empresa.id}')" class="btn btn-sm btn-danger">Eliminar</button>
-                        </td>
-                    </tr>
-                `).join('');
+                const response = await fetch(window.API_URL + '/empresas', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(empresa)
+                });
+
+                if (!response.ok) throw new Error('Error al guardar la empresa');
+
+                alert('Empresa guardada exitosamente');
+                ocultarFormularioEmpresa();
+                cargarEmpresas();
             } catch (error) {
-                console.error('Error al cargar empresas:', error);
+                console.error('Error:', error);
+                alert('Error al guardar la empresa');
             }
-        });
+        }
+
+        async function cargarEmpresas() {
+            try {
+                const response = await fetch(window.API_URL + '/empresas');
+                const empresas = await response.json();
+                
+                const listaEmpresas = document.getElementById('listaEmpresas');
+                listaEmpresas.innerHTML = '';
+
+                empresas.forEach(empresa => {
+                    const empresaHtml = `
+                        <div class="col-md-4 mb-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">${empresa.nombre}</h5>
+                                    <h6 class="card-subtitle mb-2 text-muted">${empresa.rut}</h6>
+                                    <p class="card-text">${empresa.descripcion || 'Sin descripción'}</p>
+                                    <button class="btn btn-sm btn-primary" onclick="editarEmpresa('${empresa.id}')">Editar</button>
+                                    <button class="btn btn-sm btn-danger" onclick="eliminarEmpresa('${empresa.id}')">Eliminar</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    listaEmpresas.innerHTML += empresaHtml;
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al cargar las empresas');
+            }
+        }
+
+        // Cargar empresas al iniciar
+        document.addEventListener('DOMContentLoaded', cargarEmpresas);
 
         // Función para confirmar eliminación
         function confirmarEliminar(id) {

@@ -5,22 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Evaluación de Proyectos</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="/assets/css/styles.css">
+    <link rel="stylesheet" href="./assets/css/styles.css">
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="/">Evaluación de Proyectos</a>
+            <a class="navbar-brand" href="./">Evaluación de Proyectos</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link" href="/empresas">Empresas</a>
+                        <a class="nav-link" href="./pages/empresas/">Empresas</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/proyectos">Proyectos</a>
+                        <a class="nav-link" href="./pages/proyectos/">Proyectos</a>
                     </li>
                 </ul>
             </div>
@@ -38,7 +38,7 @@
                         <div class="card-body">
                             <h5 class="card-title">Gestión de Empresas</h5>
                             <p class="card-text">Registra y administra las empresas participantes en los proyectos.</p>
-                            <a href="/empresas" class="btn btn-primary">Ir a Empresas</a>
+                            <a href="./pages/empresas/" class="btn btn-primary">Ir a Empresas</a>
                         </div>
                     </div>
                 </div>
@@ -47,7 +47,7 @@
                         <div class="card-body">
                             <h5 class="card-title">Gestión de Proyectos</h5>
                             <p class="card-text">Crea y evalúa proyectos asociados a las empresas.</p>
-                            <a href="/proyectos" class="btn btn-primary">Ir a Proyectos</a>
+                            <a href="./pages/proyectos/" class="btn btn-primary">Ir a Proyectos</a>
                         </div>
                     </div>
                 </div>
@@ -62,6 +62,51 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/assets/js/main.js"></script>
+    <script src="./assets/js/main.js"></script>
+    <script>
+        // Configuración global para las llamadas a la API
+        window.API_URL = '/.netlify/functions/api';
+        
+        // Manejar navegación SPA
+        document.addEventListener('DOMContentLoaded', function() {
+            const links = document.querySelectorAll('a[href]');
+            links.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    const href = this.getAttribute('href');
+                    if (href.startsWith('./pages/')) {
+                        e.preventDefault();
+                        window.history.pushState({}, '', href);
+                        loadContent(href);
+                    }
+                });
+            });
+        });
+
+        // Manejar navegación del navegador
+        window.addEventListener('popstate', function() {
+            loadContent(window.location.pathname);
+        });
+
+        function loadContent(path) {
+            // Remover el './' inicial si existe
+            path = path.replace(/^\.\//, '');
+            
+            // Si es la página principal
+            if (path === '' || path === '/') {
+                return;
+            }
+
+            fetch(path + 'index.html')
+                .then(response => response.text())
+                .then(html => {
+                    const content = document.querySelector('main');
+                    content.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error cargando la página:', error);
+                    document.querySelector('main').innerHTML = '<div class="container"><h1>Página no encontrada</h1></div>';
+                });
+        }
+    </script>
 </body>
 </html> 

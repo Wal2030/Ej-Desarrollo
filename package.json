@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "netlify dev",
     "build": "npm run build:frontend",
-    "build:frontend": "mkdir -p dist && cp -r frontend/* dist/ || true",
+    "build:frontend": "xcopy /E /I /Y frontend dist",
     "start": "node index.js"
   },
   "keywords": [],

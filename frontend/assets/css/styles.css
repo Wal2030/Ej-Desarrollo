@@ -11,21 +11,92 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    background-color: var(--background-color);
 }
 
 main {
     flex: 1;
 }
 
-/* Componentes personalizados */
-.card {
+/* Estilos de la barra de navegación */
+.navbar {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: transform 0.2s ease-in-out;
+}
+
+.navbar-brand {
+    font-weight: bold;
+}
+
+/* Estilos de las tarjetas */
+.card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .card:hover {
     transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.card-title {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.card-subtitle {
+    color: #7f8c8d;
+}
+
+/* Estilos de los botones */
+.btn-primary {
+    background-color: #3498db;
+    border-color: #3498db;
+}
+
+.btn-primary:hover {
+    background-color: #2980b9;
+    border-color: #2980b9;
+}
+
+.btn-danger {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+}
+
+.btn-danger:hover {
+    background-color: #c0392b;
+    border-color: #c0392b;
+}
+
+/* Estilos del formulario */
+.form-label {
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.form-control:focus {
+    border-color: #3498db;
+    box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+}
+
+/* Estilos del footer */
+.footer {
+    margin-top: auto;
+    background-color: #f8f9fa;
+    padding: 1rem 0;
+    box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+    .card {
+        margin-bottom: 1rem;
+    }
+    
+    .btn {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
 }
 
 /* Formularios */
@@ -51,12 +122,4 @@ main {
     padding: 0.5rem 1.5rem;
     border-radius: 25px;
     transition: all 0.3s ease;
-}
-
-/* Footer */
-.footer {
-    margin-top: auto;
-    padding: 1rem 0;
-    background-color: var(--background-color);
-    border-top: 1px solid #dee2e6;
 } 

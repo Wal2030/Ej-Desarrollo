@@ -1,0 +1,144 @@
+<div class="container">
+    <h1 class="mb-4">Gestión de Proyectos</h1>
+    <div class="row">
+        <div class="col-md-12 mb-4">
+            <button class="btn btn-primary" onclick="mostrarFormularioProyecto()">Nuevo Proyecto</button>
+        </div>
+    </div>
+    
+    <div id="formularioProyecto" style="display: none;" class="mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Registrar Nuevo Proyecto</h5>
+                <form id="formProyecto" onsubmit="guardarProyecto(event)">
+                    <div class="mb-3">
+                        <label for="nombre" class="form-label">Nombre del Proyecto</label>
+                        <input type="text" class="form-control" id="nombre" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="empresaId" class="form-label">Empresa</label>
+                        <select class="form-control" id="empresaId" required>
+                            <option value="">Seleccione una empresa</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="descripcion" class="form-label">Descripción</label>
+                        <textarea class="form-control" id="descripcion" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="presupuesto" class="form-label">Presupuesto</label>
+                        <input type="number" class="form-control" id="presupuesto" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="fechaInicio" class="form-label">Fecha de Inicio</label>
+                        <input type="date" class="form-control" id="fechaInicio" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">Guardar</button>
+                    <button type="button" class="btn btn-secondary" onclick="ocultarFormularioProyecto()">Cancelar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="row" id="listaProyectos">
+        <!-- Los proyectos se cargarán aquí dinámicamente -->
+    </div>
+</div>
+
+<script>
+function mostrarFormularioProyecto() {
+    document.getElementById('formularioProyecto').style.display = 'block';
+    cargarEmpresas();
+}
+
+function ocultarFormularioProyecto() {
+    document.getElementById('formularioProyecto').style.display = 'none';
+}
+
+async function cargarEmpresas() {
+    try {
+        const response = await fetch(window.API_URL + '/empresas');
+        const empresas = await response.json();
+        
+        const selectEmpresas = document.getElementById('empresaId');
+        selectEmpresas.innerHTML = '<option value="">Seleccione una empresa</option>';
+        
+        empresas.forEach(empresa => {
+            selectEmpresas.innerHTML += `<option value="${empresa.id}">${empresa.nombre}</option>`;
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al cargar las empresas');
+    }
+}
+
+async function guardarProyecto(event) {
+    event.preventDefault();
+    
+    const proyecto = {
+        nombre: document.getElementById('nombre').value,
+        empresaId: document.getElementById('empresaId').value,
+        descripcion: document.getElementById('descripcion').value,
+        presupuesto: parseFloat(document.getElementById('presupuesto').value),
+        fechaInicio: document.getElementById('fechaInicio').value
+    };
+
+    try {
+        const response = await fetch(window.API_URL + '/proyectos', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(proyecto)
+        });
+
+        if (!response.ok) throw new Error('Error al guardar el proyecto');
+
+        alert('Proyecto guardado exitosamente');
+        ocultarFormularioProyecto();
+        cargarProyectos();
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al guardar el proyecto');
+    }
+}
+
+async function cargarProyectos() {
+    try {
+        const response = await fetch(window.API_URL + '/proyectos');
+        const proyectos = await response.json();
+        
+        const listaProyectos = document.getElementById('listaProyectos');
+        listaProyectos.innerHTML = '';
+
+        proyectos.forEach(proyecto => {
+            const proyectoHtml = `
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">${proyecto.nombre}</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">Empresa: ${proyecto.empresaNombre || 'No especificada'}</h6>
+                            <p class="card-text">${proyecto.descripcion || 'Sin descripción'}</p>
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    Presupuesto: $${proyecto.presupuesto}<br>
+                                    Inicio: ${new Date(proyecto.fechaInicio).toLocaleDateString()}
+                                </small>
+                            </p>
+                            <button class="btn btn-sm btn-primary" onclick="editarProyecto('${proyecto.id}')">Editar</button>
+                            <button class="btn btn-sm btn-danger" onclick="eliminarProyecto('${proyecto.id}')">Eliminar</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            listaProyectos.innerHTML += proyectoHtml;
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al cargar los proyectos');
+    }
+}
+
+// Cargar proyectos al iniciar
+document.addEventListener('DOMContentLoaded', cargarProyectos);
+</script> 
