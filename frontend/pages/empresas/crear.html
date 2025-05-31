@@ -47,34 +47,44 @@
     <script src="/assets/js/main.js"></script>
     <script>
         async function guardarEmpresa(event) {
-            event.preventDefault();
-            
-            const password = document.getElementById('password').value;
-            const password_confirmation = document.getElementById('password_confirmation').value;
-            
-            if (password !== password_confirmation) {
-                alert('Las contraseñas no coinciden');
-                return;
-            }
+    event.preventDefault();
+    
+    const password = document.getElementById('password').value;
+    const password_confirmation = document.getElementById('password_confirmation').value;
+    
+    if (password !== password_confirmation) {
+        alert('Las contraseñas no coinciden');
+        return;
+    }
 
-            const empresaData = {
-                nombre: document.getElementById('nombre').value,
-                email: document.getElementById('email').value,
-                password: password
-            };
+    const empresaData = {
+        nombre: document.getElementById('nombre').value,
+        email: document.getElementById('email').value,
+        password: password
+    };
 
-            try {
-                await fetchAPI('/empresas', {
-                    method: 'POST',
-                    body: JSON.stringify(empresaData)
-                });
-                
-                alert('Empresa registrada exitosamente');
-                window.location.href = '/empresas';
-            } catch (error) {
-                console.error('Error al guardar:', error);
-            }
+    try {
+        const response = await fetch('/api/empresas', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(empresaData)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.mensaje || 'Error al guardar');
         }
+        
+        const data = await response.json();
+        alert('Empresa registrada exitosamente');
+        window.location.href = '/empresas';
+    } catch (error) {
+        console.error('Error al guardar:', error);
+        alert(`Error: ${error.message}`);
+    }
+}
     </script>
 </body>
 </html> 

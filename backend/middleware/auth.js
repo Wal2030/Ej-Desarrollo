@@ -75,6 +75,12 @@ const verificarPermisos = (permisoRequerido) => {
     };
 };
 
+// Modificar las rutas públicas para excluir el POST de empresas
+const rutasPublicas = [
+    { path: '/empresas', method: 'GET' },
+    { path: new RegExp('^/empresas/[^/]+$'), method: 'GET' }
+];
+
 module.exports = {
     verificarToken,
     verificarRol,
