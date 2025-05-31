@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Sistema MIPYMES</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">Sistema MIPYMES</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/login.html">Iniciar Sesión</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="card-title text-center mb-4">Registro</h2>
+                        <div id="errorMessage" class="alert alert-danger d-none"></div>
+                        
+                        <ul class="nav nav-pills mb-4 justify-content-center" id="tipoRegistro" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="cliente-tab" data-bs-toggle="pill" data-bs-target="#cliente" type="button">Cliente</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="empresa-tab" data-bs-toggle="pill" data-bs-target="#empresa" type="button">Empresa</button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content">
+                            <div class="tab-pane fade show active" id="cliente">
+                                <form id="registroClienteForm" onsubmit="return registrarCliente(event)">
+                                    <div class="mb-3">
+                                        <label for="nombreCliente" class="form-label">Nombre Completo</label>
+                                        <input type="text" class="form-control" id="nombreCliente" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="emailCliente" class="form-label">Correo Electrónico</label>
+                                        <input type="email" class="form-control" id="emailCliente" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="passwordCliente" class="form-label">Contraseña</label>
+                                        <input type="password" class="form-control" id="passwordCliente" required>
+                                    </div>
+                                    <div class="d-grid gap-2">
+                                        <button type="submit" class="btn btn-primary">Registrarse como Cliente</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div class="tab-pane fade" id="empresa">
+                                <form id="registroEmpresaForm" onsubmit="return registrarEmpresa(event)">
+                                    <div class="mb-3">
+                                        <label for="nombreEmpresa" class="form-label">Nombre de la Empresa</label>
+                                        <input type="text" class="form-control" id="nombreEmpresa" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="ruc" class="form-label">RUC</label>
+                                        <input type="text" class="form-control" id="ruc" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="direccion" class="form-label">Dirección</label>
+                                        <input type="text" class="form-control" id="direccion" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="telefono" class="form-label">Teléfono</label>
+                                        <input type="tel" class="form-control" id="telefono" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="emailEmpresa" class="form-label">Correo Electrónico</label>
+                                        <input type="email" class="form-control" id="emailEmpresa" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="passwordEmpresa" class="form-label">Contraseña</label>
+                                        <input type="password" class="form-control" id="passwordEmpresa" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="documentos" class="form-label">Documentos de Verificación</label>
+                                        <input type="file" class="form-control" id="rucDoc" accept=".pdf,.jpg,.png" required>
+                                        <small class="text-muted">Sube tu RUC en formato PDF o imagen</small>
+                                    </div>
+                                    <div class="mb-3">
+                                        <input type="file" class="form-control" id="licenciaDoc" accept=".pdf,.jpg,.png" required>
+                                        <small class="text-muted">Sube tu Licencia de Funcionamiento en formato PDF o imagen</small>
+                                    </div>
+                                    <div class="d-grid gap-2">
+                                        <button type="submit" class="btn btn-success">Registrar Empresa</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-storage-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-firestore-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
+</body>
+</html> 
