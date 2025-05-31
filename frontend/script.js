@@ -79,18 +79,21 @@ const actualizarDatos = async (e) => {
   }
 };
 
-// Funciones para manejar empresas
+// Configuración de la API
 const API_URL = '/.netlify/functions/empresas';
 
 async function obtenerEmpresas() {
   try {
     const response = await fetch(API_URL);
-    if (!response.ok) throw new Error('Error al obtener empresas');
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Error al obtener empresas');
+    }
     const empresas = await response.json();
     mostrarEmpresas(empresas);
   } catch (error) {
     console.error('Error:', error);
-    mostrarMensaje('Error al cargar las empresas', 'error');
+    mostrarMensaje('Error al cargar las empresas: ' + error.message, 'error');
   }
 }
 
@@ -114,7 +117,10 @@ async function registrarEmpresa(event) {
       body: JSON.stringify(empresa)
     });
 
-    if (!response.ok) throw new Error('Error al registrar empresa');
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Error al registrar empresa');
+    }
     
     const result = await response.json();
     mostrarMensaje('Empresa registrada exitosamente', 'success');
@@ -122,7 +128,7 @@ async function registrarEmpresa(event) {
     obtenerEmpresas();
   } catch (error) {
     console.error('Error:', error);
-    mostrarMensaje('Error al registrar la empresa', 'error');
+    mostrarMensaje('Error al registrar la empresa: ' + error.message, 'error');
   }
 }
 
@@ -134,13 +140,16 @@ async function eliminarEmpresa(id) {
       method: 'DELETE'
     });
 
-    if (!response.ok) throw new Error('Error al eliminar empresa');
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Error al eliminar empresa');
+    }
     
     mostrarMensaje('Empresa eliminada exitosamente', 'success');
     obtenerEmpresas();
   } catch (error) {
     console.error('Error:', error);
-    mostrarMensaje('Error al eliminar la empresa', 'error');
+    mostrarMensaje('Error al eliminar la empresa: ' + error.message, 'error');
   }
 }
 
