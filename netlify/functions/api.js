@@ -2,7 +2,6 @@ const express = require('express');
 const serverless = require('serverless-http');
 const cors = require('cors');
 const admin = require('firebase-admin');
-const { v4: uuidv4 } = require('uuid');
 
 // Inicializar Firebase Admin
 if (!admin.apps.length) {
@@ -11,8 +10,7 @@ if (!admin.apps.length) {
             projectId: process.env.FIREBASE_PROJECT_ID,
             clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
             privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
-        }),
-        databaseURL: process.env.FIREBASE_DATABASE_URL
+        })
     });
 }
 
@@ -23,8 +21,13 @@ const db = admin.firestore();
 app.use(cors());
 app.use(express.json());
 
+// Ruta de prueba
+app.get('/test', (req, res) => {
+    res.json({ message: 'API funcionando correctamente' });
+});
+
 // Rutas para empresas
-app.get('/api/empresas', async (req, res) => {
+app.get('/empresas', async (req, res) => {
     try {
         const snapshot = await db.collection('empresas').get();
         const empresas = [];
@@ -38,7 +41,7 @@ app.get('/api/empresas', async (req, res) => {
     }
 });
 
-app.post('/api/empresas', async (req, res) => {
+app.post('/empresas', async (req, res) => {
     try {
         const empresa = {
             ...req.body,
@@ -52,7 +55,7 @@ app.post('/api/empresas', async (req, res) => {
     }
 });
 
-app.delete('/api/empresas/:id', async (req, res) => {
+app.delete('/empresas/:id', async (req, res) => {
     try {
         await db.collection('empresas').doc(req.params.id).delete();
         res.json({ message: 'Empresa eliminada exitosamente' });
@@ -63,13 +66,12 @@ app.delete('/api/empresas/:id', async (req, res) => {
 });
 
 // Rutas para proyectos
-app.get('/api/proyectos', async (req, res) => {
+app.get('/proyectos', async (req, res) => {
     try {
         const snapshot = await db.collection('proyectos').get();
         const proyectos = [];
         for (const doc of snapshot.docs) {
             const proyecto = { id: doc.id, ...doc.data() };
-            // Obtener datos de la empresa asociada
             if (proyecto.empresaId) {
                 const empresaDoc = await db.collection('empresas').doc(proyecto.empresaId).get();
                 if (empresaDoc.exists) {
@@ -85,7 +87,7 @@ app.get('/api/proyectos', async (req, res) => {
     }
 });
 
-app.post('/api/proyectos', async (req, res) => {
+app.post('/proyectos', async (req, res) => {
     try {
         const proyecto = {
             ...req.body,
@@ -99,7 +101,7 @@ app.post('/api/proyectos', async (req, res) => {
     }
 });
 
-app.delete('/api/proyectos/:id', async (req, res) => {
+app.delete('/proyectos/:id', async (req, res) => {
     try {
         await db.collection('proyectos').doc(req.params.id).delete();
         res.json({ message: 'Proyecto eliminado exitosamente' });

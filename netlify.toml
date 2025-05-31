@@ -10,7 +10,6 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
-  runtime = "nodejs18.x" 
 
 [dev]
   command = "npm run dev"
@@ -22,6 +21,7 @@
   from = "/api/*"
   to = "/.netlify/functions/api/:splat"
   status = 200
+  force = true
 
 [[redirects]]
   from = "/assets/*"
@@ -37,3 +37,4 @@
   from = "/*"
   to = "/index.html"
   status = 200
+  force = true

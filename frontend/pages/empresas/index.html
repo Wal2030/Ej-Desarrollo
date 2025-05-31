@@ -85,7 +85,7 @@
             };
 
             try {
-                const response = await fetch('/.netlify/functions/api/api/empresas', {
+                const response = await fetch('/.netlify/functions/api/empresas', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -106,7 +106,7 @@
 
         async function cargarEmpresas() {
             try {
-                const response = await fetch('/.netlify/functions/api/api/empresas');
+                const response = await fetch('/.netlify/functions/api/empresas');
                 const empresas = await response.json();
                 
                 const listaEmpresas = document.getElementById('listaEmpresas');
@@ -140,7 +140,7 @@
         async function eliminarEmpresa(id) {
             if (confirm('¿Está seguro que desea eliminar esta empresa?')) {
                 try {
-                    const response = await fetch(`/.netlify/functions/api/api/empresas/${id}`, {
+                    const response = await fetch(`/.netlify/functions/api/empresas/${id}`, {
                         method: 'DELETE'
                     });
 
