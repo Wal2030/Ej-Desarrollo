@@ -1,19 +1,16 @@
 // Configuración de Firebase
 const firebaseConfig = {
-    apiKey: "AIzaSyBjAcyxL-7ZuLV5saWtTzJt3g_hChn_Ync",
-    authDomain: "mipymes-evaluacion.firebaseapp.com",
-    projectId: "mipymes-evaluacion",
-    storageBucket: "mipymes-evaluacion.appspot.com",
-    messagingSenderId: "654910430175",
-    appId: "1:654910430175:web:9c287dc8536e17e0e6f3b4",
-    measurementId: "G-MEASUREMENT_ID"
+    apiKey: "AIzaSyC1qPJxPkCcVUmQtXX5Yx4VBUVnuXVPDtE",
+    authDomain: "mipymes-eval-2024.firebaseapp.com",
+    projectId: "mipymes-eval-2024",
+    storageBucket: "mipymes-eval-2024.appspot.com",
+    messagingSenderId: "1098360338259",
+    appId: "1:1098360338259:web:9a8b3d5c8b8b8b8b8b8b8b"
 };
 
 // Inicializar Firebase
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
-} else {
-    firebase.app();
 }
 
 // Referencias a servicios de Firebase
