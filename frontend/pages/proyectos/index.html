@@ -57,7 +57,7 @@ function ocultarFormularioProyecto() {
 
 async function cargarEmpresas() {
     try {
-        const response = await fetch('/.netlify/functions/api/empresas');
+        const response = await fetch('/.netlify/functions/api/api/empresas');
         const empresas = await response.json();
         
         const selectEmpresas = document.getElementById('empresaId');
@@ -84,7 +84,7 @@ async function guardarProyecto(event) {
     };
 
     try {
-        const response = await fetch('/.netlify/functions/api/proyectos', {
+        const response = await fetch('/.netlify/functions/api/api/proyectos', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -105,7 +105,7 @@ async function guardarProyecto(event) {
 
 async function cargarProyectos() {
     try {
-        const response = await fetch('/.netlify/functions/api/proyectos');
+        const response = await fetch('/.netlify/functions/api/api/proyectos');
         const proyectos = await response.json();
         
         const listaProyectos = document.getElementById('listaProyectos');
@@ -142,7 +142,7 @@ async function cargarProyectos() {
 async function eliminarProyecto(id) {
     if (confirm('¿Está seguro que desea eliminar este proyecto?')) {
         try {
-            const response = await fetch(`/.netlify/functions/api/proyectos/${id}`, {
+            const response = await fetch(`/.netlify/functions/api/api/proyectos/${id}`, {
                 method: 'DELETE'
             });
 
