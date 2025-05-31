@@ -1,32 +1,4 @@
-const admin = require('firebase-admin');
-const { getFirestore } = require('firebase-admin/firestore');
-
-// Verificar variables de entorno requeridas
-const requiredEnvVars = ['FIREBASE_PROJECT_ID', 'FIREBASE_CLIENT_EMAIL', 'FIREBASE_PRIVATE_KEY'];
-for (const envVar of requiredEnvVars) {
-  if (!process.env[envVar]) {
-    throw new Error(`La variable de entorno ${envVar} es requerida`);
-  }
-}
-
-// Inicializar Firebase Admin
-if (!admin.apps.length) {
-  try {
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
-      }),
-    });
-    console.log('Firebase Admin inicializado correctamente');
-  } catch (error) {
-    console.error('Error al inicializar Firebase Admin:', error);
-    throw error;
-  }
-}
-
-const db = getFirestore();
+const { getFirestore } = require('./firebaseAdmin');
 
 exports.handler = async (event, context) => {
   const headers = {
@@ -46,6 +18,7 @@ exports.handler = async (event, context) => {
 
   try {
     console.log(`Procesando solicitud ${event.httpMethod}`);
+    const db = getFirestore();
     const empresasRef = db.collection('empresas');
 
     switch (event.httpMethod) {
@@ -81,7 +54,7 @@ exports.handler = async (event, context) => {
 
         const docRef = await empresasRef.add({
           ...data,
-          createdAt: admin.firestore.FieldValue.serverTimestamp()
+          createdAt: new Date().toISOString()
         });
         console.log(`Empresa creada con ID: ${docRef.id}`);
         return {
