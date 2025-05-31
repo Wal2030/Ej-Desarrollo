@@ -16,14 +16,12 @@ if (!firebase.apps.length) {
 // Referencias a servicios de Firebase
 const auth = firebase.auth();
 const db = firebase.firestore();
-const storage = firebase.storage();
 
 // Configuración de Firestore
 db.settings({
-    ignoreUndefinedProperties: true
+    merge: true // Esto evitará el warning de override
 });
 
 // Exportar para uso en otros archivos
 window.db = db;
-window.auth = auth;
-window.storage = storage; 
+window.auth = auth; 

@@ -146,11 +146,11 @@ async function registrarCliente(event) {
 
     try {
         // Crear usuario en Authentication
-        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
         const user = userCredential.user;
 
         // Guardar datos adicionales en Firestore
-        await firebase.firestore().collection('users').doc(user.uid).set({
+        await db.collection('users').doc(user.uid).set({
             uid: user.uid,
             email: email,
             nombre: nombre,
@@ -187,6 +187,11 @@ async function registrarCliente(event) {
             case 'auth/weak-password':
                 mensajeError = 'La contraseña debe tener al menos 6 caracteres.';
                 break;
+            case 'auth/internal-error':
+                mensajeError = 'Error interno. Por favor, verifica tu conexión a internet y vuelve a intentarlo.';
+                break;
+            default:
+                mensajeError = `Error: ${error.message}`;
         }
         
         mostrarAlerta('alertaError', mensajeError);
