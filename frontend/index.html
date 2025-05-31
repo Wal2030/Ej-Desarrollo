@@ -64,49 +64,64 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="./assets/js/main.js"></script>
     <script>
-        // Configuración global para las llamadas a la API
-        window.API_URL = '/.netlify/functions/api';
-        
-        // Manejar navegación SPA
-        document.addEventListener('DOMContentLoaded', function() {
-            const links = document.querySelectorAll('a[href]');
-            links.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    const href = this.getAttribute('href');
-                    if (href.startsWith('./pages/')) {
-                        e.preventDefault();
-                        window.history.pushState({}, '', href);
-                        loadContent(href);
-                    }
-                });
-            });
+        // Configuración de rutas y navegación
+        const routes = {
+            '/': './pages/home.html',
+            '/empresas': './pages/empresas/index.html',
+            '/proyectos': './pages/proyectos/index.html'
+        };
+
+        async function loadContent(path) {
+            try {
+                // Si es la página principal, no cargar nada
+                if (path === '/' || path === '') {
+                    return;
+                }
+
+                // Limpiar el path
+                path = path.replace(/^\.\//, '');
+                
+                // Construir la ruta del archivo
+                const filePath = `./${path}/index.html`;
+                
+                const response = await fetch(filePath);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const content = await response.text();
+                document.querySelector('main').innerHTML = content;
+                
+                // Ejecutar scripts en el contenido cargado
+                const scripts = document.querySelector('main').getElementsByTagName('script');
+                for (let script of scripts) {
+                    eval(script.innerHTML);
+                }
+            } catch (error) {
+                console.error('Error cargando el contenido:', error);
+                document.querySelector('main').innerHTML = `
+                    <div class="container mt-4">
+                        <div class="alert alert-danger">
+                            Error cargando el contenido. Por favor, intente nuevamente.
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Manejar navegación
+        document.addEventListener('click', (e) => {
+            const link = e.target.closest('a');
+            if (link && link.href && !link.href.startsWith('http')) {
+                e.preventDefault();
+                const path = link.pathname;
+                window.history.pushState({}, '', path);
+                loadContent(path);
+            }
         });
 
         // Manejar navegación del navegador
-        window.addEventListener('popstate', function() {
+        window.addEventListener('popstate', () => {
             loadContent(window.location.pathname);
         });
-
-        function loadContent(path) {
-            // Remover el './' inicial si existe
-            path = path.replace(/^\.\//, '');
-            
-            // Si es la página principal
-            if (path === '' || path === '/') {
-                return;
-            }
-
-            fetch(path + 'index.html')
-                .then(response => response.text())
-                .then(html => {
-                    const content = document.querySelector('main');
-                    content.innerHTML = html;
-                })
-                .catch(error => {
-                    console.error('Error cargando la página:', error);
-                    document.querySelector('main').innerHTML = '<div class="container"><h1>Página no encontrada</h1></div>';
-                });
-        }
     </script>
 </body>
 </html> 

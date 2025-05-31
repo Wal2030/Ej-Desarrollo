@@ -1,4 +1,4 @@
-<div class="container">
+<div class="container mt-4">
     <h1 class="mb-4">Gestión de Proyectos</h1>
     <div class="row">
         <div class="col-md-12 mb-4">
@@ -57,7 +57,7 @@ function ocultarFormularioProyecto() {
 
 async function cargarEmpresas() {
     try {
-        const response = await fetch(window.API_URL + '/empresas');
+        const response = await fetch('/.netlify/functions/api/empresas');
         const empresas = await response.json();
         
         const selectEmpresas = document.getElementById('empresaId');
@@ -84,7 +84,7 @@ async function guardarProyecto(event) {
     };
 
     try {
-        const response = await fetch(window.API_URL + '/proyectos', {
+        const response = await fetch('/.netlify/functions/api/proyectos', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -105,7 +105,7 @@ async function guardarProyecto(event) {
 
 async function cargarProyectos() {
     try {
-        const response = await fetch(window.API_URL + '/proyectos');
+        const response = await fetch('/.netlify/functions/api/proyectos');
         const proyectos = await response.json();
         
         const listaProyectos = document.getElementById('listaProyectos');
@@ -136,6 +136,24 @@ async function cargarProyectos() {
     } catch (error) {
         console.error('Error:', error);
         alert('Error al cargar los proyectos');
+    }
+}
+
+async function eliminarProyecto(id) {
+    if (confirm('¿Está seguro que desea eliminar este proyecto?')) {
+        try {
+            const response = await fetch(`/.netlify/functions/api/proyectos/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) throw new Error('Error al eliminar el proyecto');
+
+            alert('Proyecto eliminado exitosamente');
+            cargarProyectos();
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error al eliminar el proyecto');
+        }
     }
 }
 

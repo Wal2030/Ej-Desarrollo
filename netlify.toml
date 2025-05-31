@@ -15,10 +15,21 @@
   command = "npm run dev"
   port = 8888
   publish = "dist"
+  targetPort = 3000
 
 [[redirects]]
   from = "/api/*"
-  to = "/.netlify/functions/:splat"
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/assets/*"
+  to = "/assets/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/pages/*"
+  to = "/pages/:splat"
   status = 200
 
 [[redirects]]

@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/assets/css/styles.css">
 </head>
 <body>
-    <div class="container">
+    <div class="container mt-4">
         <h1 class="mb-4">Gestión de Empresas</h1>
         <div class="row">
             <div class="col-md-12 mb-4">
@@ -85,7 +85,7 @@
             };
 
             try {
-                const response = await fetch(window.API_URL + '/empresas', {
+                const response = await fetch('/.netlify/functions/api/empresas', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -106,7 +106,7 @@
 
         async function cargarEmpresas() {
             try {
-                const response = await fetch(window.API_URL + '/empresas');
+                const response = await fetch('/.netlify/functions/api/empresas');
                 const empresas = await response.json();
                 
                 const listaEmpresas = document.getElementById('listaEmpresas');
@@ -137,24 +137,22 @@
         // Cargar empresas al iniciar
         document.addEventListener('DOMContentLoaded', cargarEmpresas);
 
-        // Función para confirmar eliminación
-        function confirmarEliminar(id) {
-            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
-            const confirmBtn = document.getElementById('confirmDelete');
-            
-            confirmBtn.onclick = async () => {
+        async function eliminarEmpresa(id) {
+            if (confirm('¿Está seguro que desea eliminar esta empresa?')) {
                 try {
-                    await fetchAPI(`/empresas/${id}`, {
+                    const response = await fetch(`/.netlify/functions/api/empresas/${id}`, {
                         method: 'DELETE'
                     });
-                    modal.hide();
-                    location.reload();
+
+                    if (!response.ok) throw new Error('Error al eliminar la empresa');
+
+                    alert('Empresa eliminada exitosamente');
+                    cargarEmpresas();
                 } catch (error) {
-                    console.error('Error al eliminar:', error);
+                    console.error('Error:', error);
+                    alert('Error al eliminar la empresa');
                 }
-            };
-            
-            modal.show();
+            }
         }
     </script>
 </body>
