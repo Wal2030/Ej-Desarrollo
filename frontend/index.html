@@ -3,125 +3,177 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Evaluación de Proyectos</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="./assets/css/styles.css">
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container">
-            <a class="navbar-brand" href="./">Evaluación de Proyectos</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" href="./pages/empresas/">Empresas</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="./pages/proyectos/">Proyectos</a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-
-    <main class="container mt-4">
-        <div class="jumbotron text-center">
-            <h1 class="display-4">Bienvenido al Sistema de Evaluación de Proyectos</h1>
-            <p class="lead">Gestiona y evalúa proyectos empresariales de manera eficiente</p>
-            <hr class="my-4">
-            <div class="row mt-5">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Gestión de Empresas</h5>
-                            <p class="card-text">Registra y administra las empresas participantes en los proyectos.</p>
-                            <a href="./pages/empresas/" class="btn btn-primary">Ir a Empresas</a>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h5 class="card-title">Gestión de Proyectos</h5>
-                            <p class="card-text">Crea y evalúa proyectos asociados a las empresas.</p>
-                            <a href="./pages/proyectos/" class="btn btn-primary">Ir a Proyectos</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <footer class="footer mt-auto py-3 bg-light">
-        <div class="container text-center">
-            <span class="text-muted">© 2024 Sistema de Evaluación de Proyectos</span>
-        </div>
-    </footer>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="./assets/js/main.js"></script>
-    <script>
-        // Configuración de rutas y navegación
-        const routes = {
-            '/': './pages/home.html',
-            '/empresas': './pages/empresas/index.html',
-            '/proyectos': './pages/proyectos/index.html'
-        };
-
-        async function loadContent(path) {
-            try {
-                // Si es la página principal, no cargar nada
-                if (path === '/' || path === '') {
-                    return;
-                }
-
-                // Limpiar el path
-                path = path.replace(/^\.\//, '');
-                
-                // Construir la ruta del archivo
-                const filePath = `./${path}/index.html`;
-                
-                const response = await fetch(filePath);
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                
-                const content = await response.text();
-                document.querySelector('main').innerHTML = content;
-                
-                // Ejecutar scripts en el contenido cargado
-                const scripts = document.querySelector('main').getElementsByTagName('script');
-                for (let script of scripts) {
-                    eval(script.innerHTML);
-                }
-            } catch (error) {
-                console.error('Error cargando el contenido:', error);
-                document.querySelector('main').innerHTML = `
-                    <div class="container mt-4">
-                        <div class="alert alert-danger">
-                            Error cargando el contenido. Por favor, intente nuevamente.
-                        </div>
-                    </div>
-                `;
-            }
+    <title>Sistema de Registro de Empresas</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #2ecc71;
+            --error-color: #e74c3c;
+            --background-color: #f5f6fa;
         }
 
-        // Manejar navegación
-        document.addEventListener('click', (e) => {
-            const link = e.target.closest('a');
-            if (link && link.href && !link.href.startsWith('http')) {
-                e.preventDefault();
-                const path = link.pathname;
-                window.history.pushState({}, '', path);
-                loadContent(path);
-            }
-        });
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-        // Manejar navegación del navegador
-        window.addEventListener('popstate', () => {
-            loadContent(window.location.pathname);
-        });
-    </script>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            background-color: var(--background-color);
+            color: var(--primary-color);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            text-align: center;
+        }
+
+        .form-container {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        button {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-eliminar {
+            background-color: var(--error-color);
+        }
+
+        .btn-eliminar:hover {
+            background-color: #c0392b;
+        }
+
+        .empresas-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+
+        .empresa-card {
+            background-color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .empresa-card h3 {
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .mensaje {
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .mensaje.success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .mensaje.error {
+            background-color: var(--error-color);
+            color: white;
+        }
+
+        #mensajes {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Sistema de Registro de Empresas</h1>
+        </div>
+    </header>
+
+    <div class="container">
+        <div id="mensajes"></div>
+
+        <div class="form-container">
+            <h2>Registrar Nueva Empresa</h2>
+            <form id="form-empresa">
+                <div class="form-group">
+                    <label for="nombre">Nombre de la Empresa</label>
+                    <input type="text" id="nombre" name="nombre" required>
+                </div>
+                <div class="form-group">
+                    <label for="ruc">RUC</label>
+                    <input type="text" id="ruc" name="ruc" required pattern="[0-9]{11}">
+                </div>
+                <div class="form-group">
+                    <label for="direccion">Dirección</label>
+                    <input type="text" id="direccion" name="direccion" required>
+                </div>
+                <div class="form-group">
+                    <label for="telefono">Teléfono</label>
+                    <input type="tel" id="telefono" name="telefono" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <button type="submit">Registrar Empresa</button>
+            </form>
+        </div>
+
+        <h2>Empresas Registradas</h2>
+        <div id="lista-empresas" class="empresas-container"></div>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html> 
