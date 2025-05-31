@@ -1,0 +1,136 @@
+/* Estilos generales */
+body {
+    background-color: #f8f9fa;
+}
+
+/* Estilos para el sistema de calificación */
+.rating {
+    display: flex;
+    gap: 5px;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.rating i {
+    color: #ffc107;
+}
+
+.rating i:hover,
+.rating i:hover ~ i {
+    color: #ffc107;
+}
+
+.rating-display {
+    font-size: 20px;
+}
+
+/* Estilos para las notificaciones */
+.dropdown-menu {
+    min-width: 300px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.dropdown-item {
+    white-space: normal;
+    padding: 10px 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.dropdown-item:last-child {
+    border-bottom: none;
+}
+
+/* Estilos para badges */
+.badge {
+    font-size: 0.9em;
+    padding: 0.5em 1em;
+}
+
+/* Estilos para las tarjetas */
+.card {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: none;
+    margin-bottom: 20px;
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Estilos para los formularios */
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13,110,253,0.25);
+}
+
+/* Estilos para los botones */
+.btn {
+    padding: 0.5rem 1.5rem;
+}
+
+.btn-outline-primary:hover {
+    background-color: #0d6efd;
+    color: white;
+}
+
+/* Estilos para las reseñas */
+.resena-card {
+    border-left: 4px solid #0d6efd;
+    margin-bottom: 15px;
+}
+
+.resena-respuesta {
+    background-color: #f8f9fa;
+    border-left: 4px solid #28a745;
+    padding: 15px;
+    margin-top: 10px;
+}
+
+/* Estilos para el estado de la empresa */
+.estado-badge {
+    font-size: 1em;
+    padding: 0.5em 1em;
+    border-radius: 20px;
+}
+
+/* Estilos para las alertas */
+.alert {
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Estilos para los modales */
+.modal-content {
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+    border-bottom: 2px solid #f8f9fa;
+}
+
+.modal-footer {
+    border-top: 2px solid #f8f9fa;
+}
+
+/* Estilos responsivos */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+    
+    .card {
+        margin-bottom: 15px;
+    }
+    
+    .rating {
+        font-size: 20px;
+    }
+    
+    .dropdown-menu {
+        min-width: 250px;
+    }
+} 
