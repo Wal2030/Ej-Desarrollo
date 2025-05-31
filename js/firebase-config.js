@@ -1,9 +1,9 @@
 // Configuración de Firebase
 const firebaseConfig = {
-    apiKey: "AIzaSyC1qPJxPkCcVUmQtXX5Yx4VBUVnuXVPDtE",
-    authDomain: "mipymes-eval-2024.firebaseapp.com",
-    projectId: "mipymes-eval-2024",
-    storageBucket: "mipymes-eval-2024.appspot.com",
+    apiKey: "AIzaSyDpkGlvuGqJqXGhkn2QZd6Yd6HNJ5pqVuM",
+    authDomain: "retoevaluacion.firebaseapp.com",
+    projectId: "retoevaluacion",
+    storageBucket: "retoevaluacion.appspot.com",
     messagingSenderId: "1098360338259",
     appId: "1:1098360338259:web:9a8b3d5c8b8b8b8b8b8b8b"
 };
@@ -20,7 +20,7 @@ const storage = firebase.storage();
 
 // Configuración de Firestore
 db.settings({
-    timestampsInSnapshots: true
+    ignoreUndefinedProperties: true
 });
 
 // Exportar para uso en otros archivos
