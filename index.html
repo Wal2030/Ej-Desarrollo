@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema MIPYMES</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -15,78 +16,70 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
+                <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/">Inicio</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/empresas.html">Empresas</a>
-                    </li>
-                </ul>
-                <ul class="navbar-nav">
-                    <li class="nav-item" id="btnLoginNav">
                         <a class="nav-link" href="/login.html">Iniciar Sesión</a>
                     </li>
-                    <li class="nav-item" id="btnRegistroNav">
+                    <li class="nav-item">
                         <a class="nav-link" href="/registro.html">Registrarse</a>
-                    </li>
-                    <li class="nav-item d-none" id="btnPerfil">
-                        <a class="nav-link" href="/perfil.html">Mi Perfil</a>
-                    </li>
-                    <li class="nav-item d-none" id="btnCerrarSesion">
-                        <a class="nav-link" href="#" onclick="cerrarSesion()">Cerrar Sesión</a>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-4">
-        <div class="row">
-            <div class="col-md-12">
-                <h1 class="text-center mb-4">Bienvenido al Sistema MIPYMES</h1>
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">¿Qué puedes hacer aquí?</h5>
-                        <div class="row mt-4">
-                            <div class="col-md-6">
-                                <div class="card mb-3">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Para Clientes</h5>
-                                        <ul>
-                                            <li>Explorar empresas verificadas</li>
-                                            <li>Dejar reseñas y calificaciones</li>
-                                            <li>Recibir notificaciones de promociones</li>
-                                        </ul>
-                                        <a href="/registro.html?tipo=cliente" class="btn btn-primary">Registrarse como Cliente</a>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="card mb-3">
-                                    <div class="card-body">
-                                        <h5 class="card-title">Para Empresas</h5>
-                                        <ul>
-                                            <li>Registra tu MIPYME</li>
-                                            <li>Obtén verificación oficial</li>
-                                            <li>Gestiona tu perfil empresarial</li>
-                                        </ul>
-                                        <a href="/registro.html?tipo=empresa" class="btn btn-success">Registrar mi Empresa</a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8 text-center">
+                <h1 class="display-4 mb-4">Bienvenido al Sistema MIPYMES</h1>
+                <p class="lead mb-4">Sistema de gestión y evaluación para micro, pequeñas y medianas empresas</p>
+                <div class="d-grid gap-3 d-sm-flex justify-content-sm-center">
+                    <a href="/login.html" class="btn btn-primary btn-lg px-4 gap-3">
+                        <i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión
+                    </a>
+                    <a href="/registro.html" class="btn btn-outline-primary btn-lg px-4">
+                        <i class="fas fa-user-plus me-2"></i>Registrarse
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-5">
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-body text-center">
+                        <i class="fas fa-building fa-3x text-primary mb-3"></i>
+                        <h3>Para Empresas</h3>
+                        <p>Registra tu empresa y gestiona tu perfil empresarial</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-body text-center">
+                        <i class="fas fa-star fa-3x text-primary mb-3"></i>
+                        <h3>Para Clientes</h3>
+                        <p>Evalúa y califica los servicios de las empresas</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-body text-center">
+                        <i class="fas fa-chart-line fa-3x text-primary mb-3"></i>
+                        <h3>Evaluaciones</h3>
+                        <p>Sistema de evaluación transparente y confiable</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-auth-compat.js"></script>
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/main.js"></script>
 </body>
 </html> 

@@ -243,4 +243,38 @@ function cerrarSesion() {
     }).catch((error) => {
         console.error('Error al cerrar sesión:', error);
     });
+}
+
+// Función para mostrar/ocultar contraseña en el registro de cliente
+function togglePasswordCliente() {
+    const passwordInput = document.getElementById('passwordCliente');
+    const toggleButton = passwordInput.nextElementSibling;
+    const icon = toggleButton.querySelector('i');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        passwordInput.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+// Función para mostrar/ocultar contraseña en el registro de empresa
+function togglePasswordEmpresa() {
+    const passwordInput = document.getElementById('passwordEmpresa');
+    const toggleButton = passwordInput.nextElementSibling;
+    const icon = toggleButton.querySelector('i');
+    
+    if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        passwordInput.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
 } 
