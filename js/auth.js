@@ -1,23 +1,23 @@
 // Referencias a elementos del DOM
-const loginForm = document.getElementById('loginForm');
-const alertaError = document.getElementById('alertaError');
-const alertaExito = document.getElementById('alertaExito');
+function getElement(id) {
+    return document.getElementById(id);
+}
 
 // Función para iniciar sesión
 async function iniciarSesion(event) {
     event.preventDefault();
     
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
+    const email = getElement('email').value;
+    const password = getElement('password').value;
 
     try {
-        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
         
         // Mostrar mensaje de éxito
         mostrarAlerta('alertaExito', '¡Inicio de sesión exitoso! Redirigiendo...');
         
         // Obtener el rol del usuario
-        const userDoc = await db.collection('users').doc(userCredential.user.uid).get();
+        const userDoc = await firebase.firestore().collection('users').doc(userCredential.user.uid).get();
         const userData = userDoc.data();
 
         // Redirigir según el rol
@@ -34,6 +34,7 @@ async function iniciarSesion(event) {
         }, 1500);
 
     } catch (error) {
+        console.error('Error de inicio de sesión:', error);
         let mensajeError = 'Error al iniciar sesión. Por favor, intenta de nuevo.';
         
         switch (error.code) {
@@ -86,37 +87,39 @@ async function iniciarSesionGoogle() {
 
 // Función para mostrar/ocultar contraseña
 function togglePassword() {
-    const passwordInput = document.getElementById('password');
-    const toggleButton = passwordInput.nextElementSibling;
-    const icon = toggleButton.querySelector('i');
-    
-    if (passwordInput.type === 'password') {
-        passwordInput.type = 'text';
-        icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
-    } else {
-        passwordInput.type = 'password';
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.add('fa-eye');
+    const passwordInput = getElement('password');
+    if (passwordInput) {
+        const toggleButton = passwordInput.nextElementSibling;
+        const icon = toggleButton.querySelector('i');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
     }
 }
 
 // Función para mostrar alertas
 function mostrarAlerta(tipo, mensaje) {
-    const alerta = document.getElementById(tipo);
-    alerta.textContent = mensaje;
-    alerta.classList.remove('d-none');
-    
-    // Ocultar la alerta después de 5 segundos
-    setTimeout(() => {
-        alerta.classList.add('d-none');
-    }, 5000);
+    const alerta = getElement(tipo);
+    if (alerta) {
+        alerta.textContent = mensaje;
+        alerta.classList.remove('d-none');
+        setTimeout(() => {
+            alerta.classList.add('d-none');
+        }, 5000);
+    }
 }
 
 // Verificar estado de autenticación
-auth.onAuthStateChanged(async (user) => {
+firebase.auth().onAuthStateChanged(async (user) => {
     if (user) {
-        const userDoc = await db.collection('users').doc(user.uid).get();
+        const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
         if (userDoc.exists) {
             const userData = userDoc.data();
             // Redirigir si ya está autenticado y está en la página de login
@@ -136,17 +139,18 @@ auth.onAuthStateChanged(async (user) => {
 // Función para registrar cliente
 async function registrarCliente(event) {
     event.preventDefault();
-    const email = document.getElementById('emailCliente').value;
-    const password = document.getElementById('passwordCliente').value;
-    const nombre = document.getElementById('nombreCliente').value;
-    const errorMessage = document.getElementById('errorMessage');
+    
+    const email = getElement('emailCliente').value;
+    const password = getElement('passwordCliente').value;
+    const nombre = getElement('nombreCliente').value;
 
     try {
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        // Crear usuario en Authentication
+        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
         const user = userCredential.user;
 
         // Guardar datos adicionales en Firestore
-        await db.collection('users').doc(user.uid).set({
+        await firebase.firestore().collection('users').doc(user.uid).set({
             uid: user.uid,
             email: email,
             nombre: nombre,
@@ -160,30 +164,51 @@ async function registrarCliente(event) {
             displayName: nombre
         });
 
+        mostrarAlerta('alertaExito', '¡Registro exitoso! Redirigiendo...');
+        
         // Redirigir al dashboard
-        window.location.href = '/dashboard-cliente.html';
+        setTimeout(() => {
+            window.location.href = '/dashboard-cliente.html';
+        }, 1500);
     } catch (error) {
-        errorMessage.textContent = 'Error al registrar: ' + error.message;
-        errorMessage.classList.remove('d-none');
+        console.error('Error de registro:', error);
+        let mensajeError = 'Error al registrar. Por favor, intenta de nuevo.';
+        
+        switch (error.code) {
+            case 'auth/email-already-in-use':
+                mensajeError = 'Ya existe una cuenta con este correo electrónico.';
+                break;
+            case 'auth/invalid-email':
+                mensajeError = 'Correo electrónico inválido.';
+                break;
+            case 'auth/operation-not-allowed':
+                mensajeError = 'El registro de usuarios está deshabilitado temporalmente.';
+                break;
+            case 'auth/weak-password':
+                mensajeError = 'La contraseña debe tener al menos 6 caracteres.';
+                break;
+        }
+        
+        mostrarAlerta('alertaError', mensajeError);
     }
 }
 
 // Función para registrar empresa
 async function registrarEmpresa(event) {
     event.preventDefault();
-    const email = document.getElementById('emailEmpresa').value;
-    const password = document.getElementById('passwordEmpresa').value;
-    const nombre = document.getElementById('nombreEmpresa').value;
-    const ruc = document.getElementById('ruc').value;
-    const direccion = document.getElementById('direccion').value;
-    const telefono = document.getElementById('telefono').value;
-    const rucDoc = document.getElementById('rucDoc').files[0];
-    const licenciaDoc = document.getElementById('licenciaDoc').files[0];
-    const errorMessage = document.getElementById('errorMessage');
+    
+    const email = getElement('emailEmpresa').value;
+    const password = getElement('passwordEmpresa').value;
+    const nombre = getElement('nombreEmpresa').value;
+    const ruc = getElement('ruc').value;
+    const direccion = getElement('direccion').value;
+    const telefono = getElement('telefono').value;
+    const rucDoc = getElement('rucDoc').files[0];
+    const licenciaDoc = getElement('licenciaDoc').files[0];
 
     try {
         // Crear usuario en Authentication
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
         const user = userCredential.user;
 
         // Subir documentos al Storage
@@ -191,7 +216,7 @@ async function registrarEmpresa(event) {
         const licenciaUrl = await subirDocumento(licenciaDoc, `empresas/${user.uid}/licencia`);
 
         // Guardar datos en Firestore
-        await db.collection('users').doc(user.uid).set({
+        await firebase.firestore().collection('users').doc(user.uid).set({
             uid: user.uid,
             email: email,
             role: 'empresa',
@@ -199,7 +224,7 @@ async function registrarEmpresa(event) {
             status: 'pending'
         });
 
-        await db.collection('empresas').doc(user.uid).set({
+        await firebase.firestore().collection('empresas').doc(user.uid).set({
             uid: user.uid,
             nombre: nombre,
             ruc: ruc,
@@ -220,17 +245,38 @@ async function registrarEmpresa(event) {
             displayName: nombre
         });
 
+        mostrarAlerta('alertaExito', '¡Registro exitoso! Redirigiendo...');
+        
         // Redirigir a página de espera de verificación
-        window.location.href = '/verificacion-pendiente.html';
+        setTimeout(() => {
+            window.location.href = '/verificacion-pendiente.html';
+        }, 1500);
     } catch (error) {
-        errorMessage.textContent = 'Error al registrar: ' + error.message;
-        errorMessage.classList.remove('d-none');
+        console.error('Error de registro:', error);
+        let mensajeError = 'Error al registrar. Por favor, intenta de nuevo.';
+        
+        switch (error.code) {
+            case 'auth/email-already-in-use':
+                mensajeError = 'Ya existe una cuenta con este correo electrónico.';
+                break;
+            case 'auth/invalid-email':
+                mensajeError = 'Correo electrónico inválido.';
+                break;
+            case 'auth/operation-not-allowed':
+                mensajeError = 'El registro de usuarios está deshabilitado temporalmente.';
+                break;
+            case 'auth/weak-password':
+                mensajeError = 'La contraseña debe tener al menos 6 caracteres.';
+                break;
+        }
+        
+        mostrarAlerta('alertaError', mensajeError);
     }
 }
 
 // Función auxiliar para subir documentos
 async function subirDocumento(file, path) {
-    const storageRef = storage.ref(path);
+    const storageRef = firebase.storage().ref(path);
     await storageRef.put(file);
     return await storageRef.getDownloadURL();
 }
@@ -247,34 +293,38 @@ function cerrarSesion() {
 
 // Función para mostrar/ocultar contraseña en el registro de cliente
 function togglePasswordCliente() {
-    const passwordInput = document.getElementById('passwordCliente');
-    const toggleButton = passwordInput.nextElementSibling;
-    const icon = toggleButton.querySelector('i');
-    
-    if (passwordInput.type === 'password') {
-        passwordInput.type = 'text';
-        icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
-    } else {
-        passwordInput.type = 'password';
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.add('fa-eye');
+    const passwordInput = getElement('passwordCliente');
+    if (passwordInput) {
+        const toggleButton = passwordInput.nextElementSibling;
+        const icon = toggleButton.querySelector('i');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
     }
 }
 
 // Función para mostrar/ocultar contraseña en el registro de empresa
 function togglePasswordEmpresa() {
-    const passwordInput = document.getElementById('passwordEmpresa');
-    const toggleButton = passwordInput.nextElementSibling;
-    const icon = toggleButton.querySelector('i');
-    
-    if (passwordInput.type === 'password') {
-        passwordInput.type = 'text';
-        icon.classList.remove('fa-eye');
-        icon.classList.add('fa-eye-slash');
-    } else {
-        passwordInput.type = 'password';
-        icon.classList.remove('fa-eye-slash');
-        icon.classList.add('fa-eye');
+    const passwordInput = getElement('passwordEmpresa');
+    if (passwordInput) {
+        const toggleButton = passwordInput.nextElementSibling;
+        const icon = toggleButton.querySelector('i');
+        
+        if (passwordInput.type === 'password') {
+            passwordInput.type = 'text';
+            icon.classList.remove('fa-eye');
+            icon.classList.add('fa-eye-slash');
+        } else {
+            passwordInput.type = 'password';
+            icon.classList.remove('fa-eye-slash');
+            icon.classList.add('fa-eye');
+        }
     }
 } 
