@@ -1,113 +1,80 @@
+const BASE_URL = "https://retoevaluacion.netlify.app/.netlify/functions/api";
+
 function guardar(event) {
   event.preventDefault();
 
   const datos = {
     nombre: document.getElementById("nombre").value,
-    email: document.getElementById("email").value,
-    password: document.getElementById("password").value,
-    password_confirmation: document.getElementById("password_confirmation").value
+    email: document.getElementById("email").value
   };
 
-  console.log("Datos enviados: ", datos);
-
-  fetch("https://retoevaluacion.netlify.app/.netlify/functions/Prueba", {
+  fetch(BASE_URL, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(datos)
   })
-    .then(response => response.json())
+    .then(res => res.json())
     .then(data => {
-      console.log("Respuesta del servidor:", data);
       alert(data.mensaje);
       listar();
     })
-    .catch(error => {
-      console.error("Error:", error);
-    });
+    .catch(err => console.error("Error:", err));
 }
 
 function listar() {
-  fetch("https://retoevaluacion.netlify.app/.netlify/functions/Prueba")
-    .then(response => response.json())
+  fetch(BASE_URL)
+    .then(res => res.json())
     .then(data => cargar(data))
-    .catch(error => console.error("Error:", error));
+    .catch(err => console.error("Error:", err));
 }
 
 function cargar(lista) {
   let salida = "";
-  lista.forEach((elemento, i) => {
+  lista.forEach(elemento => {
     salida += `<b>Nombre de la empresa:</b> ${elemento.nombre}<br>`;
     salida += `<b>Email:</b> ${elemento.email}<br>`;
-    salida += `<button onclick="rellenarFormulario('${elemento.email}', '${elemento.nombre}')">Editar Empresa</button> `;
-    salida += `<button onclick="eliminar('${elemento.email}')">Eliminar Empresa</button><br><br>`;
+    salida += `<button onclick="rellenarFormulario('${elemento.id}', '${elemento.email}', '${elemento.nombre}')">Editar</button> `;
+    salida += `<button onclick="eliminar('${elemento.id}')">Eliminar</button><br><br>`;
   });
   document.getElementById("rta").innerHTML = salida;
 }
 
-function rellenarFormulario(email, nombre) {
+function rellenarFormulario(id, email, nombre) {
+  document.getElementById("idActualizar").value = id;
   document.getElementById("emailActualizar").value = email;
   document.getElementById("nombreActualizar").value = nombre;
 }
 
-function eliminar(email) {
-  if (!confirm(`¿Estás seguro de eliminar el registro con email: ${email}?`)) {
-    return;
-  }
+function eliminar(id) {
+  if (!confirm("¿Seguro de eliminar esta empresa?")) return;
 
-  fetch("https://retoevaluacion.netlify.app/.netlify/functions/Prueba/eliminar", {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ email })
+  fetch(`${BASE_URL}/${id}`, {
+    method: "DELETE"
   })
-    .then(response => response.json())
+    .then(res => res.json())
     .then(data => {
-      alert(data.mensaje || "Registro eliminado");
-      listar(); 
+      alert(data.mensaje);
+      listar();
     })
-    .catch(error => {
-      console.error("Error al eliminar:", error);
-      alert("Error al eliminar la empresa");
-    });
+    .catch(err => console.error("Error al eliminar:", err));
 }
 
 const actualizarDatos = async (e) => {
   e.preventDefault();
-
-  const email = document.getElementById("emailActualizar").value;
+  const id = document.getElementById("idActualizar").value;
   const nombre = document.getElementById("nombreActualizar").value;
-
-  console.log("Email enviado:", email);
+  const email = document.getElementById("emailActualizar").value;
 
   try {
-    const respuesta = await fetch("https://retoevaluacion.netlify.app/.netlify/functions/Prueba/actualizar", {
+    const respuesta = await fetch(`${BASE_URL}/${id}`, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, nombre }),
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nombre, email })
     });
-
     const datos = await respuesta.json();
-    console.log("Respuesta del servidor:", datos);
-
-    if (datos.mensaje === "No se encontró ninguna empresa con ese correo") {
-      alert("El correo no está registrado.");
-    } else if (respuesta.ok) {
-      alert("Datos actualizados");
-      listar();
-    } else {
-      alert(datos.mensaje || "Error al actualizar los datos");
-    }
-
+    alert(datos.mensaje || "Actualizado");
+    listar();
   } catch (error) {
     console.error("Error al actualizar:", error);
-    alert("Error de conexión");
   }
 };
-
-
-

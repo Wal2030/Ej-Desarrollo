@@ -3,15 +3,15 @@ const path = require('path');
 
 async function buildFrontend() {
     try {
-        // Asegurarse de que el directorio dist existe y está limpio
+        // Limpiar el directorio dist si existe
         await fs.emptyDir('dist');
 
-        // Copiar todo el contenido de frontend a dist
+        // Copiar archivos del frontend
         await fs.copy('frontend', 'dist');
 
-        console.log('✅ Construcción del frontend completada con éxito');
+        console.log('Frontend construido exitosamente');
     } catch (error) {
-        console.error('❌ Error durante la construcción:', error);
+        console.error('Error al construir el frontend:', error);
         process.exit(1);
     }
 }
