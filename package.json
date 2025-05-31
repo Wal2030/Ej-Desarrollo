@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "netlify dev",
     "build": "npm run build:frontend",
-    "build:frontend": "xcopy /E /I /Y frontend dist",
+    "build:frontend": "node scripts/build.js",
     "start": "node index.js"
   },
   "keywords": [],
@@ -23,7 +23,8 @@
     "express": "^4.18.2",
     "firebase-admin": "^11.11.1",
     "serverless-http": "^3.2.0",
-    "uuid": "^9.0.0"
+    "uuid": "^9.0.0",
+    "fs-extra": "^11.2.0"
   },
   "devDependencies": {
     "netlify-cli": "^17.0.0"
