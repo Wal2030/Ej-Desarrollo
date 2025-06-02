@@ -268,8 +268,16 @@ async function subirDocumento(file, path) {
         const storageRef = firebase.storage().ref();
         const fileRef = storageRef.child(path);
         
-        // Subir el archivo
-        const snapshot = await fileRef.put(file);
+        // Configurar los metadatos para evitar problemas CORS
+        const metadata = {
+            contentType: file.type,
+            customMetadata: {
+                'Access-Control-Allow-Origin': '*'
+            }
+        };
+        
+        // Subir el archivo con los metadatos
+        const snapshot = await fileRef.put(file, metadata);
         console.log('Documento subido exitosamente:', path);
         
         // Obtener la URL de descarga
@@ -278,7 +286,14 @@ async function subirDocumento(file, path) {
         
         return downloadURL;
     } catch (error) {
-        console.error('Error al subir documento:', error);
+        console.error('Error detallado al subir documento:', error);
+        if (error.code === 'storage/unauthorized') {
+            throw new Error('No tienes permisos para subir archivos. Por favor, inicia sesión nuevamente.');
+        } else if (error.code === 'storage/canceled') {
+            throw new Error('La subida fue cancelada. Por favor, intenta de nuevo.');
+        } else if (error.code === 'storage/unknown') {
+            throw new Error('Error desconocido al subir el archivo. Por favor, intenta de nuevo.');
+        }
         throw new Error(`Error al subir ${path}: ${error.message}`);
     }
 }
@@ -328,8 +343,6 @@ async function registrarEmpresa(event) {
         const ruc = getElement('ruc').value;
         const direccion = getElement('direccion').value;
         const telefono = getElement('telefono').value;
-        const rucDoc = getElement('rucDoc').files[0];
-        const licenciaDoc = getElement('licenciaDoc').files[0];
 
         console.log('Iniciando registro de empresa:', { email, nombre, ruc });
 
@@ -343,35 +356,12 @@ async function registrarEmpresa(event) {
             throw new Error(mensajeError);
         }
 
-        // Validar archivos
-        if (!rucDoc || !licenciaDoc) {
-            throw new Error('Por favor, sube todos los documentos requeridos');
-        }
-
-        // Validar tamaño de archivos (máximo 5MB cada uno)
-        const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-        if (rucDoc.size > MAX_FILE_SIZE || licenciaDoc.size > MAX_FILE_SIZE) {
-            throw new Error('Los archivos no deben superar los 5MB cada uno');
-        }
-
-        // Validar tipos de archivo permitidos
-        const tiposPermitidos = ['application/pdf', 'image/jpeg', 'image/png'];
-        if (!tiposPermitidos.includes(rucDoc.type) || !tiposPermitidos.includes(licenciaDoc.type)) {
-            throw new Error('Solo se permiten archivos PDF, JPG o PNG');
-        }
-
         // Crear usuario en Authentication
         const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
         const user = userCredential.user;
         console.log('Usuario creado:', user.uid);
 
         try {
-            // Subir documentos al Storage
-            console.log('Subiendo documentos...');
-            const rucUrl = await subirDocumento(rucDoc, `empresas/${user.uid}/ruc-${Date.now()}`);
-            const licenciaUrl = await subirDocumento(licenciaDoc, `empresas/${user.uid}/licencia-${Date.now()}`);
-            console.log('Documentos subidos exitosamente');
-
             // Guardar datos en Firestore
             console.log('Guardando datos en Firestore...');
             const userData = {
@@ -379,7 +369,7 @@ async function registrarEmpresa(event) {
                 email: email,
                 role: 'empresa',
                 createdAt: new Date().toISOString(),
-                status: 'pending',
+                status: 'active', // Cambiado a 'active' ya que no requiere verificación
                 nombre: nombre
             };
 
@@ -390,11 +380,7 @@ async function registrarEmpresa(event) {
                 direccion: direccion,
                 telefono: telefono,
                 email: email,
-                status: 'pending',
-                documentosVerificacion: {
-                    rucDoc: rucUrl,
-                    licenciaFuncionamiento: licenciaUrl
-                },
+                status: 'active', // Cambiado a 'active' ya que no requiere verificación
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString(),
                 calificaciones: [],
@@ -411,11 +397,11 @@ async function registrarEmpresa(event) {
                 displayName: nombre
             });
 
-            mostrarAlerta('alertaExito', '¡Registro exitoso! Tu cuenta está pendiente de verificación.');
+            mostrarAlerta('alertaExito', '¡Registro exitoso! Redirigiendo al dashboard...');
             
-            // Redirigir a página de espera de verificación
+            // Redirigir al dashboard de empresa
             setTimeout(() => {
-                window.location.href = '/verificacion-pendiente.html';
+                window.location.href = '/dashboard-empresa.html';
             }, 2000);
         } catch (error) {
             // Si hay un error después de crear el usuario, eliminarlo
