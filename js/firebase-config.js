@@ -17,51 +17,49 @@ const firebaseConfig = {
     measurementId: "G-15N6EZDK5N"
 };
 
-// Singleton para Firebase
-let app;
-let auth;
-let db;
-let storage;
+// Inicializar Firebase inmediatamente
+function initFirebase() {
+    try {
+        // Inicializar Firebase solo si no está inicializado
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+            console.log('Firebase inicializado correctamente');
+        }
 
-// Inicializar Firebase solo si no está inicializado
-if (!firebase.apps.length) {
-    app = firebase.initializeApp(firebaseConfig);
-} else {
-    app = firebase.apps[0];
-}
+        // Obtener instancias de los servicios
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
 
-// Obtener instancias de los servicios
-auth = firebase.auth();
-db = firebase.firestore();
-storage = firebase.storage();
+        // Configurar Firestore inmediatamente después de obtener la instancia
+        db.settings({
+            merge: true,
+            cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
+        });
 
-// Configurar Firestore inmediatamente después de obtener la instancia
-db.settings({
-    merge: true,
-    cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
-});
+        // Intentar habilitar persistencia
+        db.enablePersistence({
+            synchronizeTabs: true
+        }).catch((err) => {
+            if (err.code === 'failed-precondition') {
+                console.warn('La persistencia falló, múltiples pestañas abiertas');
+            } else if (err.code === 'unimplemented') {
+                console.warn('El navegador no soporta persistencia');
+            }
+        });
 
-// Intentar habilitar persistencia
-db.enablePersistence({
-    synchronizeTabs: true
-}).catch((err) => {
-    if (err.code === 'failed-precondition') {
-        console.warn('La persistencia falló, múltiples pestañas abiertas');
-    } else if (err.code === 'unimplemented') {
-        console.warn('El navegador no soporta persistencia');
+        // Exportar las instancias globalmente
+        window.auth = auth;
+        window.db = db;
+        window.storage = storage;
+
+        return true;
+    } catch (error) {
+        console.error('Error al inicializar Firebase:', error);
+        mostrarErrorConfiguracion('Error al inicializar la aplicación: ' + error.message);
+        return false;
     }
-});
-
-// Exportar las instancias globalmente
-window.app = app;
-window.auth = auth;
-window.db = db;
-window.storage = storage;
-
-// Exportar las instancias para módulos ES6
-export { app, auth, db, storage };
-
-console.log('Firebase inicializado correctamente');
+}
 
 // Función para mostrar errores de configuración
 function mostrarErrorConfiguracion(mensaje) {
@@ -78,4 +76,16 @@ function mostrarErrorConfiguracion(mensaje) {
         <strong>Error de Configuración:</strong> ${mensaje}<br>
         <small>Por favor, contacta al administrador del sistema.</small>
     `;
-} 
+}
+
+// Inicializar Firebase inmediatamente
+if (!initFirebase()) {
+    console.error('No se pudo inicializar Firebase');
+}
+
+// También asegurarnos de que Firebase esté inicializado cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+    if (!firebase.apps.length) {
+        initFirebase();
+    }
+}); 
