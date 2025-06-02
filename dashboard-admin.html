@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Sistema MIPYMES</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">Sistema MIPYMES</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" id="nombreUsuario">
+                            <i class="fas fa-user-shield me-2"></i>
+                            <span>Cargando...</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" onclick="cerrarSesion()">
+                            <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- Alertas -->
+        <div id="alertaError" class="alert alert-danger d-none" role="alert"></div>
+        <div id="alertaExito" class="alert alert-success d-none" role="alert"></div>
+
+        <!-- Panel de Administración -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="card-title">
+                            <i class="fas fa-tools me-2"></i>
+                            Panel de Administración
+                        </h2>
+                        <hr>
+                        <!-- Hacer Admin -->
+                        <div class="mb-4">
+                            <h4>Hacer Administrador</h4>
+                            <div class="input-group">
+                                <input type="email" class="form-control" id="emailAdmin" 
+                                       placeholder="Correo del usuario">
+                                <button class="btn btn-primary" onclick="hacerAdminHandler()">
+                                    <i class="fas fa-user-shield me-2"></i>Hacer Admin
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de Empresas Pendientes -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-body">
+                        <h3 class="card-title mb-4">
+                            <i class="fas fa-clock me-2"></i>
+                            Empresas Pendientes de Verificación
+                        </h3>
+                        <div id="empresasPendientes" class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>RUC</th>
+                                        <th>Email</th>
+                                        <th>Documentos</th>
+                                        <th>Fecha</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="empresasPendientesList">
+                                    <!-- Las empresas se cargarán aquí -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Rechazo -->
+    <div class="modal fade" id="modalRechazo" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Motivo de Rechazo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <textarea class="form-control" id="motivoRechazo" rows="3"
+                              placeholder="Explica el motivo del rechazo..."></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" onclick="confirmarRechazo()">
+                        Confirmar Rechazo
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    <!-- Custom JS -->
+    <script src="js/firebase-config.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/admin.js"></script>
+    <script>
+        let empresaSeleccionada = null;
+        const modalRechazo = new bootstrap.Modal(document.getElementById('modalRechazo'));
+
+        // Verificar que el usuario sea admin
+        firebase.auth().onAuthStateChanged(async (user) => {
+            if (user) {
+                const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
+                if (!userDoc.exists || userDoc.data().role !== 'admin') {
+                    window.location.href = '/';
+                    return;
+                }
+                
+                document.querySelector('#nombreUsuario span').textContent = user.displayName || user.email;
+                cargarEmpresasPendientes();
+            } else {
+                window.location.href = '/login.html';
+            }
+        });
+
+        // Función para hacer admin
+        async function hacerAdminHandler() {
+            try {
+                const email = document.getElementById('emailAdmin').value;
+                if (!email) {
+                    throw new Error('Por favor, ingresa un correo electrónico');
+                }
+                
+                const resultado = await hacerAdmin(email);
+                mostrarAlerta('alertaExito', resultado.mensaje);
+                document.getElementById('emailAdmin').value = '';
+            } catch (error) {
+                mostrarAlerta('alertaError', error.message);
+            }
+        }
+
+        // Función para cargar empresas pendientes
+        async function cargarEmpresasPendientes() {
+            try {
+                const empresas = await obtenerEmpresasPendientes();
+                const tbody = document.getElementById('empresasPendientesList');
+                
+                if (empresas.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center">No hay empresas pendientes de verificación</td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = empresas.map(empresa => `
+                    <tr>
+                        <td>${empresa.nombre}</td>
+                        <td>${empresa.ruc}</td>
+                        <td>${empresa.email}</td>
+                        <td>
+                            <a href="${empresa.documentosVerificacion.rucDoc}" target="_blank" class="btn btn-sm btn-info">
+                                <i class="fas fa-file-alt"></i> RUC
+                            </a>
+                            <a href="${empresa.documentosVerificacion.licenciaFuncionamiento}" target="_blank" class="btn btn-sm btn-info">
+                                <i class="fas fa-file-alt"></i> Licencia
+                            </a>
+                        </td>
+                        <td>${new Date(empresa.createdAt).toLocaleDateString()}</td>
+                        <td>
+                            <button class="btn btn-success btn-sm" onclick="aprobarEmpresa('${empresa.id}')">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="rechazarEmpresa('${empresa.id}')">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                mostrarAlerta('alertaError', 'Error al cargar empresas pendientes');
+                console.error(error);
+            }
+        }
+
+        // Funciones para aprobar/rechazar empresas
+        async function aprobarEmpresa(empresaId) {
+            try {
+                await gestionarEmpresa(empresaId, 'aprobar');
+                mostrarAlerta('alertaExito', 'Empresa aprobada exitosamente');
+                cargarEmpresasPendientes();
+            } catch (error) {
+                mostrarAlerta('alertaError', error.message);
+            }
+        }
+
+        function rechazarEmpresa(empresaId) {
+            empresaSeleccionada = empresaId;
+            modalRechazo.show();
+        }
+
+        async function confirmarRechazo() {
+            try {
+                const motivo = document.getElementById('motivoRechazo').value;
+                if (!motivo) {
+                    throw new Error('Por favor, ingresa un motivo de rechazo');
+                }
+
+                await gestionarEmpresa(empresaSeleccionada, 'rechazar', motivo);
+                modalRechazo.hide();
+                document.getElementById('motivoRechazo').value = '';
+                mostrarAlerta('alertaExito', 'Empresa rechazada exitosamente');
+                cargarEmpresasPendientes();
+            } catch (error) {
+                mostrarAlerta('alertaError', error.message);
+            }
+        }
+    </script>
+</body>
+</html> 

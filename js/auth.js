@@ -283,6 +283,27 @@ async function subirDocumento(file, path) {
     }
 }
 
+// Función para verificar si el email ya existe
+async function verificarEmailExistente(email) {
+    try {
+        const userQuery = await firebase.firestore().collection('users')
+            .where('email', '==', email)
+            .get();
+
+        if (!userQuery.empty) {
+            const userData = userQuery.docs[0].data();
+            return {
+                exists: true,
+                role: userData.role
+            };
+        }
+        return { exists: false };
+    } catch (error) {
+        console.error('Error al verificar email:', error);
+        return { exists: false, error };
+    }
+}
+
 // Función para registrar empresa
 async function registrarEmpresa(event) {
     event.preventDefault();
@@ -299,9 +320,31 @@ async function registrarEmpresa(event) {
 
         console.log('Iniciando registro de empresa:', { email, nombre, ruc });
 
+        // Verificar si el email ya existe
+        const emailCheck = await verificarEmailExistente(email);
+        if (emailCheck.exists) {
+            let mensajeError = 'Este correo electrónico ya está registrado';
+            if (emailCheck.role) {
+                mensajeError += ` como ${emailCheck.role}`;
+            }
+            throw new Error(mensajeError);
+        }
+
         // Validar archivos
         if (!rucDoc || !licenciaDoc) {
             throw new Error('Por favor, sube todos los documentos requeridos');
+        }
+
+        // Validar tamaño de archivos (máximo 5MB cada uno)
+        const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+        if (rucDoc.size > MAX_FILE_SIZE || licenciaDoc.size > MAX_FILE_SIZE) {
+            throw new Error('Los archivos no deben superar los 5MB cada uno');
+        }
+
+        // Validar tipos de archivo permitidos
+        const tiposPermitidos = ['application/pdf', 'image/jpeg', 'image/png'];
+        if (!tiposPermitidos.includes(rucDoc.type) || !tiposPermitidos.includes(licenciaDoc.type)) {
+            throw new Error('Solo se permiten archivos PDF, JPG o PNG');
         }
 
         // Crear usuario en Authentication
@@ -309,57 +352,63 @@ async function registrarEmpresa(event) {
         const user = userCredential.user;
         console.log('Usuario creado:', user.uid);
 
-        // Subir documentos al Storage
-        console.log('Subiendo documentos...');
-        const rucUrl = await subirDocumento(rucDoc, `empresas/${user.uid}/ruc-${Date.now()}`);
-        const licenciaUrl = await subirDocumento(licenciaDoc, `empresas/${user.uid}/licencia-${Date.now()}`);
-        console.log('Documentos subidos exitosamente');
+        try {
+            // Subir documentos al Storage
+            console.log('Subiendo documentos...');
+            const rucUrl = await subirDocumento(rucDoc, `empresas/${user.uid}/ruc-${Date.now()}`);
+            const licenciaUrl = await subirDocumento(licenciaDoc, `empresas/${user.uid}/licencia-${Date.now()}`);
+            console.log('Documentos subidos exitosamente');
 
-        // Guardar datos en Firestore
-        console.log('Guardando datos en Firestore...');
-        const userData = {
-            uid: user.uid,
-            email: email,
-            role: 'empresa',
-            createdAt: new Date().toISOString(),
-            status: 'pending',
-            nombre: nombre
-        };
+            // Guardar datos en Firestore
+            console.log('Guardando datos en Firestore...');
+            const userData = {
+                uid: user.uid,
+                email: email,
+                role: 'empresa',
+                createdAt: new Date().toISOString(),
+                status: 'pending',
+                nombre: nombre
+            };
 
-        const empresaData = {
-            uid: user.uid,
-            nombre: nombre,
-            ruc: ruc,
-            direccion: direccion,
-            telefono: telefono,
-            email: email,
-            status: 'pending',
-            documentosVerificacion: {
-                rucDoc: rucUrl,
-                licenciaFuncionamiento: licenciaUrl
-            },
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            calificaciones: [],
-            promedioCalificacion: 0
-        };
+            const empresaData = {
+                uid: user.uid,
+                nombre: nombre,
+                ruc: ruc,
+                direccion: direccion,
+                telefono: telefono,
+                email: email,
+                status: 'pending',
+                documentosVerificacion: {
+                    rucDoc: rucUrl,
+                    licenciaFuncionamiento: licenciaUrl
+                },
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                calificaciones: [],
+                promedioCalificacion: 0
+            };
 
-        // Guardar en ambas colecciones
-        await firebase.firestore().collection('users').doc(user.uid).set(userData);
-        await firebase.firestore().collection('empresas').doc(user.uid).set(empresaData);
-        console.log('Datos guardados exitosamente');
+            // Guardar en ambas colecciones
+            await firebase.firestore().collection('users').doc(user.uid).set(userData);
+            await firebase.firestore().collection('empresas').doc(user.uid).set(empresaData);
+            console.log('Datos guardados exitosamente');
 
-        // Actualizar perfil
-        await user.updateProfile({
-            displayName: nombre
-        });
+            // Actualizar perfil
+            await user.updateProfile({
+                displayName: nombre
+            });
 
-        mostrarAlerta('alertaExito', '¡Registro exitoso! Tu cuenta está pendiente de verificación.');
-        
-        // Redirigir a página de espera de verificación
-        setTimeout(() => {
-            window.location.href = '/verificacion-pendiente.html';
-        }, 2000);
+            mostrarAlerta('alertaExito', '¡Registro exitoso! Tu cuenta está pendiente de verificación.');
+            
+            // Redirigir a página de espera de verificación
+            setTimeout(() => {
+                window.location.href = '/verificacion-pendiente.html';
+            }, 2000);
+        } catch (error) {
+            // Si hay un error después de crear el usuario, eliminarlo
+            await user.delete();
+            throw error;
+        }
     } catch (error) {
         console.error('Error detallado del registro:', error);
         let mensajeError = 'Error al registrar. Por favor, intenta de nuevo.';
@@ -367,7 +416,7 @@ async function registrarEmpresa(event) {
         if (error.code) {
             switch (error.code) {
                 case 'auth/email-already-in-use':
-                    mensajeError = 'Ya existe una cuenta con este correo electrónico.';
+                    mensajeError = 'Este correo electrónico ya está registrado. Por favor, usa otro correo o inicia sesión.';
                     break;
                 case 'auth/invalid-email':
                     mensajeError = 'Correo electrónico inválido.';
@@ -381,6 +430,8 @@ async function registrarEmpresa(event) {
                 default:
                     mensajeError = error.message;
             }
+        } else {
+            mensajeError = error.message || 'Error desconocido al registrar empresa';
         }
         
         mostrarAlerta('alertaError', mensajeError);

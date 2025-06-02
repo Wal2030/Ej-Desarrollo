@@ -97,22 +97,28 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+    <!-- Custom JS -->
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/reviews.js"></script>
+    <script src="js/calificaciones.js"></script>
     <script>
-        // Cargar datos del usuario
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                const nombreElement = document.querySelector('#nombreUsuario span');
-                nombreElement.textContent = user.displayName || user.email;
-                cargarEmpresas();
-            } else {
-                window.location.href = '/login.html';
-            }
+        // Esperar a que Firebase se inicialice
+        window.addEventListener('load', () => {
+            // Cargar datos del usuario
+            firebase.auth().onAuthStateChanged(user => {
+                if (user) {
+                    const nombreElement = document.querySelector('#nombreUsuario span');
+                    nombreElement.textContent = user.displayName || user.email;
+                    cargarEmpresas();
+                } else {
+                    window.location.href = '/login.html';
+                }
+            });
         });
 
         // Manejar búsqueda

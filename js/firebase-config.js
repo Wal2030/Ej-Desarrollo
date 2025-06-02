@@ -11,11 +11,11 @@ const firebaseConfig = {
     apiKey: "AIzaSyCeJARHI7JwRb_nqypXdb56wEOG5oKtp3Y",
     authDomain: "reto-mipymes.firebaseapp.com",
     projectId: "reto-mipymes",
-    storageBucket: "reto-mipymes.firebasestorage.app",
+    storageBucket: "reto-mipymes.appspot.com",
     messagingSenderId: "755553843367",
     appId: "1:755553843367:web:2ac35c5e52506f669bc382",
     measurementId: "G-15N6EZDK5N"
-  };
+};
 
 // Función para inicializar Firebase
 function initializeFirebase() {
@@ -26,7 +26,7 @@ function initializeFirebase() {
             console.log('Firebase inicializado correctamente');
         }
 
-        // Obtener referencias
+        // Obtener referencias a los servicios
         const auth = firebase.auth();
         const db = firebase.firestore();
         const storage = firebase.storage();
@@ -44,18 +44,14 @@ function initializeFirebase() {
                 mostrarErrorConfiguracion('Error al conectar con la base de datos');
             });
 
-        // Verificar autenticación
-        auth.onAuthStateChanged(user => {
-            if (user) {
-                console.log('Usuario autenticado:', user.email);
-            } else {
-                console.log('No hay usuario autenticado');
-            }
-        });
+        // Verificar Storage
+        if (!storage) {
+            throw new Error('Firebase Storage no está disponible');
+        }
 
-        // Exportar referencias
-        window.auth = auth;
+        // Exportar referencias globalmente
         window.db = db;
+        window.auth = auth;
         window.storage = storage;
 
         return { success: true };
@@ -68,6 +64,7 @@ function initializeFirebase() {
 
 // Función para mostrar errores de configuración
 function mostrarErrorConfiguracion(mensaje) {
+    console.error('Error de configuración:', mensaje);
     // Crear alerta si no existe
     let alertaError = document.getElementById('alertaErrorConfig');
     if (!alertaError) {
@@ -85,8 +82,10 @@ function mostrarErrorConfiguracion(mensaje) {
     `;
 }
 
-// Inicializar Firebase
-const initResult = initializeFirebase();
-if (!initResult.success) {
-    console.error('No se pudo inicializar Firebase:', initResult.error);
-} 
+// Inicializar Firebase cuando el documento esté listo
+document.addEventListener('DOMContentLoaded', () => {
+    const initResult = initializeFirebase();
+    if (!initResult.success) {
+        console.error('No se pudo inicializar Firebase:', initResult.error);
+    }
+}); 
