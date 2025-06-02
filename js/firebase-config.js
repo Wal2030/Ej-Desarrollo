@@ -17,13 +17,19 @@ const firebaseConfig = {
     measurementId: "G-15N6EZDK5N"
 };
 
+// Variable global para verificar si Firebase ya está inicializado
+let firebaseInitialized = false;
+
 // Función para inicializar Firebase
-function initializeFirebase() {
+async function initializeFirebase() {
+    if (firebaseInitialized) {
+        return { success: true };
+    }
+
     try {
-        // Verificar si ya está inicializado
+        // Inicializar Firebase si no está inicializado
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
-            console.log('Firebase inicializado correctamente');
         }
 
         // Obtener referencias a los servicios
@@ -33,16 +39,27 @@ function initializeFirebase() {
 
         // Configurar Firestore
         db.settings({
-            merge: true
+            merge: true,
+            cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
         });
 
-        // Verificar conexión con Firestore
-        db.enableNetwork()
-            .then(() => console.log('Conexión con Firestore establecida'))
-            .catch(error => {
-                console.error('Error al conectar con Firestore:', error);
-                mostrarErrorConfiguracion('Error al conectar con la base de datos');
+        // Habilitar persistencia offline
+        try {
+            await db.enablePersistence({
+                synchronizeTabs: true
             });
+        } catch (err) {
+            if (err.code == 'failed-precondition') {
+                console.warn('La persistencia falló, múltiples pestañas abiertas');
+            } else if (err.code == 'unimplemented') {
+                console.warn('El navegador no soporta persistencia');
+            }
+        }
+
+        // Verificar conexión con Firestore
+        await db.enableNetwork();
+        console.log('Firebase inicializado correctamente');
+        console.log('Conexión con Firestore establecida');
 
         // Verificar Storage
         if (!storage) {
@@ -54,10 +71,13 @@ function initializeFirebase() {
         window.auth = auth;
         window.storage = storage;
 
+        // Marcar como inicializado
+        firebaseInitialized = true;
+
         return { success: true };
     } catch (error) {
         console.error('Error al inicializar Firebase:', error);
-        mostrarErrorConfiguracion('Error al inicializar la aplicación');
+        mostrarErrorConfiguracion('Error al inicializar la aplicación: ' + error.message);
         return { success: false, error };
     }
 }
@@ -82,10 +102,19 @@ function mostrarErrorConfiguracion(mensaje) {
     `;
 }
 
-// Inicializar Firebase cuando el documento esté listo
-document.addEventListener('DOMContentLoaded', () => {
-    const initResult = initializeFirebase();
-    if (!initResult.success) {
-        console.error('No se pudo inicializar Firebase:', initResult.error);
+// Inicializar Firebase inmediatamente
+initializeFirebase().catch(error => {
+    console.error('Error durante la inicialización:', error);
+});
+
+// También inicializar cuando el documento esté listo
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const initResult = await initializeFirebase();
+        if (!initResult.success) {
+            console.error('No se pudo inicializar Firebase:', initResult.error);
+        }
+    } catch (error) {
+        console.error('Error durante la inicialización:', error);
     }
 }); 
