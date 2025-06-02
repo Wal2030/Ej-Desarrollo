@@ -261,38 +261,72 @@ async function registrarCliente(event) {
     }
 }
 
+// Función auxiliar para subir documentos
+async function subirDocumento(file, path) {
+    try {
+        console.log('Iniciando subida de documento:', path);
+        const storageRef = firebase.storage().ref();
+        const fileRef = storageRef.child(path);
+        
+        // Subir el archivo
+        const snapshot = await fileRef.put(file);
+        console.log('Documento subido exitosamente:', path);
+        
+        // Obtener la URL de descarga
+        const downloadURL = await snapshot.ref.getDownloadURL();
+        console.log('URL del documento:', downloadURL);
+        
+        return downloadURL;
+    } catch (error) {
+        console.error('Error al subir documento:', error);
+        throw new Error(`Error al subir ${path}: ${error.message}`);
+    }
+}
+
 // Función para registrar empresa
 async function registrarEmpresa(event) {
     event.preventDefault();
     
-    const email = getElement('emailEmpresa').value;
-    const password = getElement('passwordEmpresa').value;
-    const nombre = getElement('nombreEmpresa').value;
-    const ruc = getElement('ruc').value;
-    const direccion = getElement('direccion').value;
-    const telefono = getElement('telefono').value;
-    const rucDoc = getElement('rucDoc').files[0];
-    const licenciaDoc = getElement('licenciaDoc').files[0];
-
     try {
+        const email = getElement('emailEmpresa').value;
+        const password = getElement('passwordEmpresa').value;
+        const nombre = getElement('nombreEmpresa').value;
+        const ruc = getElement('ruc').value;
+        const direccion = getElement('direccion').value;
+        const telefono = getElement('telefono').value;
+        const rucDoc = getElement('rucDoc').files[0];
+        const licenciaDoc = getElement('licenciaDoc').files[0];
+
+        console.log('Iniciando registro de empresa:', { email, nombre, ruc });
+
+        // Validar archivos
+        if (!rucDoc || !licenciaDoc) {
+            throw new Error('Por favor, sube todos los documentos requeridos');
+        }
+
         // Crear usuario en Authentication
         const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
         const user = userCredential.user;
+        console.log('Usuario creado:', user.uid);
 
         // Subir documentos al Storage
-        const rucUrl = await subirDocumento(rucDoc, `empresas/${user.uid}/ruc`);
-        const licenciaUrl = await subirDocumento(licenciaDoc, `empresas/${user.uid}/licencia`);
+        console.log('Subiendo documentos...');
+        const rucUrl = await subirDocumento(rucDoc, `empresas/${user.uid}/ruc-${Date.now()}`);
+        const licenciaUrl = await subirDocumento(licenciaDoc, `empresas/${user.uid}/licencia-${Date.now()}`);
+        console.log('Documentos subidos exitosamente');
 
         // Guardar datos en Firestore
-        await firebase.firestore().collection('users').doc(user.uid).set({
+        console.log('Guardando datos en Firestore...');
+        const userData = {
             uid: user.uid,
             email: email,
             role: 'empresa',
             createdAt: new Date().toISOString(),
-            status: 'pending'
-        });
+            status: 'pending',
+            nombre: nombre
+        };
 
-        await firebase.firestore().collection('empresas').doc(user.uid).set({
+        const empresaData = {
             uid: user.uid,
             nombre: nombre,
             ruc: ruc,
@@ -305,48 +339,52 @@ async function registrarEmpresa(event) {
                 licenciaFuncionamiento: licenciaUrl
             },
             createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        });
+            updatedAt: new Date().toISOString(),
+            calificaciones: [],
+            promedioCalificacion: 0
+        };
+
+        // Guardar en ambas colecciones
+        await firebase.firestore().collection('users').doc(user.uid).set(userData);
+        await firebase.firestore().collection('empresas').doc(user.uid).set(empresaData);
+        console.log('Datos guardados exitosamente');
 
         // Actualizar perfil
         await user.updateProfile({
             displayName: nombre
         });
 
-        mostrarAlerta('alertaExito', '¡Registro exitoso! Redirigiendo...');
+        mostrarAlerta('alertaExito', '¡Registro exitoso! Tu cuenta está pendiente de verificación.');
         
         // Redirigir a página de espera de verificación
         setTimeout(() => {
             window.location.href = '/verificacion-pendiente.html';
-        }, 1500);
+        }, 2000);
     } catch (error) {
-        console.error('Error de registro:', error);
+        console.error('Error detallado del registro:', error);
         let mensajeError = 'Error al registrar. Por favor, intenta de nuevo.';
         
-        switch (error.code) {
-            case 'auth/email-already-in-use':
-                mensajeError = 'Ya existe una cuenta con este correo electrónico.';
-                break;
-            case 'auth/invalid-email':
-                mensajeError = 'Correo electrónico inválido.';
-                break;
-            case 'auth/operation-not-allowed':
-                mensajeError = 'El registro de usuarios está deshabilitado temporalmente.';
-                break;
-            case 'auth/weak-password':
-                mensajeError = 'La contraseña debe tener al menos 6 caracteres.';
-                break;
+        if (error.code) {
+            switch (error.code) {
+                case 'auth/email-already-in-use':
+                    mensajeError = 'Ya existe una cuenta con este correo electrónico.';
+                    break;
+                case 'auth/invalid-email':
+                    mensajeError = 'Correo electrónico inválido.';
+                    break;
+                case 'auth/operation-not-allowed':
+                    mensajeError = 'El registro de usuarios está deshabilitado temporalmente.';
+                    break;
+                case 'auth/weak-password':
+                    mensajeError = 'La contraseña debe tener al menos 6 caracteres.';
+                    break;
+                default:
+                    mensajeError = error.message;
+            }
         }
         
         mostrarAlerta('alertaError', mensajeError);
     }
-}
-
-// Función auxiliar para subir documentos
-async function subirDocumento(file, path) {
-    const storageRef = firebase.storage().ref(path);
-    await storageRef.put(file);
-    return await storageRef.getDownloadURL();
 }
 
 // Función para cerrar sesión
