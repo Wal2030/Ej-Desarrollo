@@ -18,8 +18,29 @@ async function iniciarSesion(event) {
         
         // Obtener el rol del usuario
         const userDoc = await firebase.firestore().collection('users').doc(userCredential.user.uid).get();
-        const userData = userDoc.data();
+        
+        // Si el documento no existe, créalo
+        if (!userDoc.exists) {
+            const userData = {
+                uid: userCredential.user.uid,
+                email: email,
+                nombre: userCredential.user.displayName || email.split('@')[0],
+                role: 'cliente', // Role por defecto
+                createdAt: new Date().toISOString(),
+                status: 'active'
+            };
+            
+            await firebase.firestore().collection('users').doc(userCredential.user.uid).set(userData);
+            
+            // Redirigir al dashboard de cliente
+            setTimeout(() => {
+                window.location.href = '/dashboard-cliente.html';
+            }, 1500);
+            return;
+        }
 
+        const userData = userDoc.data();
+        
         // Redirigir según el rol
         setTimeout(() => {
             if (userData.role === 'empresa') {
@@ -118,9 +139,33 @@ function mostrarAlerta(tipo, mensaje) {
 
 // Verificar estado de autenticación
 firebase.auth().onAuthStateChanged(async (user) => {
-    if (user) {
-        const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
-        if (userDoc.exists) {
+    try {
+        if (user) {
+            // Esperar a que el token de ID se actualice
+            await user.getIdToken(true);
+            
+            const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
+            
+            // Si el documento no existe, créalo
+            if (!userDoc.exists) {
+                const userData = {
+                    uid: user.uid,
+                    email: user.email,
+                    nombre: user.displayName || user.email.split('@')[0],
+                    role: 'cliente', // Role por defecto
+                    createdAt: new Date().toISOString(),
+                    status: 'active'
+                };
+                
+                await firebase.firestore().collection('users').doc(user.uid).set(userData);
+                
+                // Si está en la página de login, redirigir al dashboard
+                if (window.location.pathname === '/login.html') {
+                    window.location.href = '/dashboard-cliente.html';
+                }
+                return;
+            }
+
             const userData = userDoc.data();
             // Redirigir si ya está autenticado y está en la página de login
             if (window.location.pathname === '/login.html') {
@@ -133,6 +178,8 @@ firebase.auth().onAuthStateChanged(async (user) => {
                 }
             }
         }
+    } catch (error) {
+        console.error('Error al verificar autenticación:', error);
     }
 });
 
