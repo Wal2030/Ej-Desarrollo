@@ -29,6 +29,7 @@ function initializeFirebase() {
         // Obtener referencias
         const auth = firebase.auth();
         const db = firebase.firestore();
+        const storage = firebase.storage();
 
         // Configurar Firestore
         db.settings({
@@ -55,6 +56,7 @@ function initializeFirebase() {
         // Exportar referencias
         window.auth = auth;
         window.db = db;
+        window.storage = storage;
 
         return { success: true };
     } catch (error) {
