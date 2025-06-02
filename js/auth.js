@@ -286,6 +286,17 @@ async function subirDocumento(file, path) {
 // Función para verificar si el email ya existe
 async function verificarEmailExistente(email) {
     try {
+        // Primero intentar con Authentication
+        try {
+            const methods = await firebase.auth().fetchSignInMethodsForEmail(email);
+            if (methods && methods.length > 0) {
+                return { exists: true, role: 'unknown' };
+            }
+        } catch (authError) {
+            console.warn('Error al verificar email en Auth:', authError);
+        }
+
+        // Luego verificar en Firestore
         const userQuery = await firebase.firestore().collection('users')
             .where('email', '==', email)
             .get();
@@ -294,13 +305,15 @@ async function verificarEmailExistente(email) {
             const userData = userQuery.docs[0].data();
             return {
                 exists: true,
-                role: userData.role
+                role: userData.role || 'unknown'
             };
         }
+
         return { exists: false };
     } catch (error) {
         console.error('Error al verificar email:', error);
-        return { exists: false, error };
+        // En caso de error de permisos, asumimos que no existe
+        return { exists: false };
     }
 }
 
