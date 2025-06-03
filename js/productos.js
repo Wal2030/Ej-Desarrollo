@@ -68,17 +68,32 @@ async function guardarProducto() {
 async function cargarProductos() {
     try {
         const user = firebase.auth().currentUser;
-        if (!user) return;
+        if (!user) {
+            mostrarAlerta('alertaError', 'Debes iniciar sesión para ver los productos');
+            return;
+        }
+
+        const listaProductos = document.getElementById('listaProductos');
+        if (!listaProductos) {
+            console.error('No se encontró el elemento listaProductos');
+            return;
+        }
+
+        // Mostrar mensaje de carga
+        listaProductos.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div></div>';
 
         const productosRef = firebase.firestore().collection('productos')
             .where('empresaId', '==', user.uid)
             .orderBy('createdAt', 'desc');
 
         const snapshot = await productosRef.get();
-        const listaProductos = document.getElementById('listaProductos');
         
         if (snapshot.empty) {
-            listaProductos.innerHTML = '<p class="text-center">No hay productos registrados</p>';
+            listaProductos.innerHTML = `
+                <div class="alert alert-info text-center" role="alert">
+                    <i class="fas fa-box me-2"></i>
+                    No hay productos registrados. ¡Agrega tu primer producto!
+                </div>`;
             return;
         }
 
@@ -92,7 +107,7 @@ async function cargarProductos() {
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="card-title">${producto.nombre}</h5>
                         <div>
-                            <button class="btn btn-sm btn-danger" onclick="eliminarProducto('${doc.id}')">
+                            <button class="btn btn-sm btn-danger" onclick="eliminarProducto('${doc.id}')" aria-label="Eliminar ${producto.nombre}">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -111,6 +126,14 @@ async function cargarProductos() {
         });
     } catch (error) {
         console.error('Error al cargar productos:', error);
+        const listaProductos = document.getElementById('listaProductos');
+        if (listaProductos) {
+            listaProductos.innerHTML = `
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error al cargar los productos. Por favor, intenta de nuevo más tarde.
+                </div>`;
+        }
         mostrarAlerta('alertaError', 'Error al cargar los productos');
     }
 }
