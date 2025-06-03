@@ -86,6 +86,6 @@ if (!initFirebase()) {
 // También asegurarnos de que Firebase esté inicializado cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', function() {
     if (!firebase.apps.length) {
-        initFirebase();
+        initFirebasei();
     }
 }); 

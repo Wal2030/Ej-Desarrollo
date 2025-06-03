@@ -364,12 +364,14 @@ async function registrarEmpresa(event) {
         try {
             // Guardar datos en Firestore
             console.log('Guardando datos en Firestore...');
+            const timestamp = new Date().toISOString();
+            
             const userData = {
                 uid: user.uid,
                 email: email,
                 role: 'empresa',
-                createdAt: new Date().toISOString(),
-                status: 'active', // Cambiado a 'active' ya que no requiere verificación
+                createdAt: timestamp,
+                status: 'pending',
                 nombre: nombre
             };
 
@@ -380,11 +382,16 @@ async function registrarEmpresa(event) {
                 direccion: direccion,
                 telefono: telefono,
                 email: email,
-                status: 'active', // Cambiado a 'active' ya que no requiere verificación
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
+                status: 'pending',
+                createdAt: timestamp,
+                updatedAt: timestamp,
                 calificaciones: [],
-                promedioCalificacion: 0
+                promedioCalificacion: 0,
+                totalResenas: 0,
+                documentosVerificacion: {
+                    rucDoc: '',
+                    licenciaFuncionamiento: ''
+                }
             };
 
             // Guardar en ambas colecciones

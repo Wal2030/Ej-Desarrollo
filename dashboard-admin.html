@@ -60,15 +60,20 @@
                             </div>
                         </div>
                         
-                        <!-- Botón para arreglar timestamps -->
+                        <!-- Sección de Mantenimiento -->
                         <div class="mb-4">
-                            <h4>Mantenimiento</h4>
-                            <button class="btn btn-warning" onclick="arreglarTimestamps()">
-                                <i class="fas fa-wrench me-2"></i>Arreglar Timestamps
-                            </button>
-                            <small class="text-muted d-block mt-2">
-                                Use este botón si las empresas no aparecen en el panel
-                            </small>
+                            <h4>Mantenimiento del Sistema</h4>
+                            <div class="d-grid gap-2">
+                                <button class="btn btn-warning" onclick="verificarIndices()">
+                                    <i class="fas fa-check-circle me-2"></i>Verificar Índices
+                                </button>
+                                <button class="btn btn-info" onclick="corregirEmpresas()">
+                                    <i class="fas fa-tools me-2"></i>Corregir Empresas
+                                </button>
+                                <small class="text-muted d-block mt-2">
+                                    Use estos botones si las empresas no aparecen correctamente en el sistema
+                                </small>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -197,12 +202,18 @@
                         <td>${empresa.ruc}</td>
                         <td>${empresa.email}</td>
                         <td>
-                            <a href="${empresa.documentosVerificacion.rucDoc}" target="_blank" class="btn btn-sm btn-info">
-                                <i class="fas fa-file-alt"></i> RUC
-                            </a>
-                            <a href="${empresa.documentosVerificacion.licenciaFuncionamiento}" target="_blank" class="btn btn-sm btn-info">
-                                <i class="fas fa-file-alt"></i> Licencia
-                            </a>
+                            ${empresa.documentosVerificacion ? `
+                                ${empresa.documentosVerificacion.rucDoc ? `
+                                    <a href="${empresa.documentosVerificacion.rucDoc}" target="_blank" class="btn btn-sm btn-info">
+                                        <i class="fas fa-file-alt"></i> RUC
+                                    </a>
+                                ` : '<span class="badge bg-warning">Sin RUC</span>'}
+                                ${empresa.documentosVerificacion.licenciaFuncionamiento ? `
+                                    <a href="${empresa.documentosVerificacion.licenciaFuncionamiento}" target="_blank" class="btn btn-sm btn-info">
+                                        <i class="fas fa-file-alt"></i> Licencia
+                                    </a>
+                                ` : '<span class="badge bg-warning">Sin Licencia</span>'}
+                            ` : '<span class="badge bg-warning">Sin documentos</span>'}
                         </td>
                         <td>${new Date(empresa.createdAt).toLocaleDateString()}</td>
                         <td>

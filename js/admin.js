@@ -34,6 +34,12 @@ async function obtenerEmpresasPendientes() {
             .orderBy('createdAt', 'desc')
             .get();
         
+        if (snapshot.empty) {
+            console.log('No hay empresas pendientes');
+            return [];
+        }
+
+        console.log(`Se encontraron ${snapshot.size} empresas pendientes`);
         return snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
@@ -130,5 +136,88 @@ function mostrarAlerta(tipo, mensaje) {
         }, 5000);
     } else {
         console.log(mensaje);
+    }
+}
+
+// Función para corregir todas las empresas
+async function corregirEmpresas() {
+    try {
+        const empresasRef = firebase.firestore().collection('empresas');
+        const snapshot = await empresasRef.get();
+        
+        let actualizadas = 0;
+        for (const doc of snapshot.docs) {
+            const data = doc.data();
+            const actualizacion = {};
+            let necesitaActualizacion = false;
+
+            // Verificar campos requeridos
+            if (!data.createdAt) {
+                actualizacion.createdAt = new Date().toISOString();
+                necesitaActualizacion = true;
+            }
+            if (!data.updatedAt) {
+                actualizacion.updatedAt = new Date().toISOString();
+                necesitaActualizacion = true;
+            }
+            if (!data.status) {
+                actualizacion.status = 'pending';
+                necesitaActualizacion = true;
+            }
+            if (!data.promedioCalificacion) {
+                actualizacion.promedioCalificacion = 0;
+                necesitaActualizacion = true;
+            }
+            if (!data.totalResenas) {
+                actualizacion.totalResenas = 0;
+                necesitaActualizacion = true;
+            }
+
+            // Si faltan campos, actualizar el documento
+            if (necesitaActualizacion) {
+                await doc.ref.update(actualizacion);
+                actualizadas++;
+                console.log(`Empresa ${doc.id} actualizada con campos faltantes`);
+            }
+        }
+
+        mostrarAlerta('alertaExito', `Corrección completada. ${actualizadas} empresas actualizadas.`);
+        
+        // Recargar la lista de empresas
+        await cargarEmpresasPendientes();
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarAlerta('alertaError', 'Error al corregir empresas: ' + error.message);
+    }
+}
+
+// Función para verificar el estado de los índices
+async function verificarIndices() {
+    try {
+        // Intentar una consulta que requiere índices
+        const empresasRef = firebase.firestore().collection('empresas');
+        await empresasRef
+            .where('status', '==', 'pending')
+            .orderBy('createdAt', 'desc')
+            .limit(1)
+            .get();
+
+        const resenasRef = firebase.firestore().collection('resenas');
+        await resenasRef
+            .where('status', '==', 'active')
+            .orderBy('createdAt', 'desc')
+            .limit(1)
+            .get();
+
+        mostrarAlerta('alertaExito', 'Los índices están funcionando correctamente');
+        return true;
+    } catch (error) {
+        console.error('Error al verificar índices:', error);
+        if (error.code === 'failed-precondition') {
+            mostrarAlerta('alertaError', 'Los índices no están creados. Por favor, crea los índices necesarios.');
+        } else {
+            mostrarAlerta('alertaError', 'Error al verificar índices: ' + error.message);
+        }
+        return false;
     }
 } 
