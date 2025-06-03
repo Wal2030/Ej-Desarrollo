@@ -17,6 +17,12 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // Función para verificar si el usuario es cliente
+    function isCliente() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "cliente";
+    }
+
     // Reglas para usuarios
     match /users/{userId} {
       // Permitir lectura pública para verificar emails y roles
@@ -33,16 +39,20 @@ service cloud.firestore {
       allow read: if true;
       // Permitir creación si está autenticado y es su propio documento
       allow create: if isAuthenticated() && request.auth.uid == empresaId;
-      // Permitir actualización/eliminación si es propietario o admin
-      allow update, delete: if isOwner(empresaId) || isAdmin();
+      // Permitir actualización si es propietario, admin o cliente con cambios en calificaciones
+      allow update: if isOwner(empresaId) || isAdmin() || 
+        (isCliente() && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['calificaciones', 'promedioCalificacion', 'totalResenas']));
+      // Solo el admin puede eliminar empresas
+      allow delete: if isAdmin();
     }
 
     // Reglas para reseñas
     match /resenas/{resenaId} {
       // Permitir lectura pública de reseñas
       allow read: if true;
-      // Permitir crear reseñas si está autenticado
-      allow create: if isAuthenticated();
+      // Permitir crear reseñas si está autenticado y es cliente
+      allow create: if isAuthenticated() && isCliente();
       // Permitir actualización si es el autor de la reseña, la empresa reseñada o admin
       allow update: if isAuthenticated() && 
                    (request.auth.uid == resource.data.usuarioId || 

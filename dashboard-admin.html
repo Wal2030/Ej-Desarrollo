@@ -217,12 +217,18 @@
                         </td>
                         <td>${new Date(empresa.createdAt).toLocaleDateString()}</td>
                         <td>
-                            <button class="btn btn-success btn-sm" onclick="aprobarEmpresa('${empresa.id}')">
-                                <i class="fas fa-check"></i>
-                            </button>
-                            <button class="btn btn-danger btn-sm" onclick="rechazarEmpresa('${empresa.id}')">
-                                <i class="fas fa-times"></i>
-                            </button>
+                            ${empresa.status === 'pending' ? `
+                                <button class="btn btn-success btn-sm" onclick="aprobarEmpresa('${empresa.id}')">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="rechazarEmpresa('${empresa.id}')">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            ` : `
+                                <span class="badge ${empresa.status === 'verified' ? 'bg-success' : 'bg-danger'}">
+                                    ${empresa.status === 'verified' ? 'Verificada' : 'Rechazada'}
+                                </span>
+                            `}
                         </td>
                     </tr>
                 `).join('');

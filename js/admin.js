@@ -30,23 +30,22 @@ async function obtenerEmpresasPendientes() {
     try {
         const empresasRef = firebase.firestore().collection('empresas');
         const snapshot = await empresasRef
-            .where('status', '==', 'pending')
             .orderBy('createdAt', 'desc')
             .get();
         
         if (snapshot.empty) {
-            console.log('No hay empresas pendientes');
+            console.log('No hay empresas registradas');
             return [];
         }
 
-        console.log(`Se encontraron ${snapshot.size} empresas pendientes`);
+        console.log(`Se encontraron ${snapshot.size} empresas`);
         return snapshot.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }));
     } catch (error) {
-        console.error('Error al obtener empresas pendientes:', error);
-        throw new Error('Error al cargar empresas pendientes');
+        console.error('Error al obtener empresas:', error);
+        throw new Error('Error al cargar empresas');
     }
 }
 
