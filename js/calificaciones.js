@@ -3,6 +3,14 @@ let empresasFiltradas = [];
 let paginaActual = 1;
 const empresasPorPagina = 6;
 
+// Variables globales para modales
+let modalProductos;
+
+// Inicializar modales cuando el documento esté listo
+document.addEventListener('DOMContentLoaded', () => {
+    modalProductos = new bootstrap.Modal(document.getElementById('modalProductos'));
+});
+
 // Función para cargar empresas
 async function cargarEmpresas() {
     try {
@@ -65,10 +73,16 @@ function mostrarEmpresas(pagina = 1) {
                             (${empresa.totalResenas || 0} reseñas)
                         </small>
                     </div>
-                    <button class="btn btn-primary w-100" 
-                            onclick="mostrarModalCalificacion('${empresa.id}', '${empresa.nombre}')">
-                        <i class="fas fa-star me-2"></i>Calificar
-                    </button>
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-primary" 
+                                onclick="mostrarModalCalificacion('${empresa.id}', '${empresa.nombre}')">
+                            <i class="fas fa-star me-2"></i>Calificar
+                        </button>
+                        <button class="btn btn-info text-white" 
+                                onclick="verProductos('${empresa.id}', '${empresa.nombre}')">
+                            <i class="fas fa-box me-2"></i>Ver Productos
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -416,4 +430,48 @@ function generarEstrellasHTML(calificacion) {
         }
     }
     return estrellas.join('');
+}
+
+// Función para ver productos de una empresa
+async function verProductos(empresaId, empresaNombre) {
+    try {
+        const productosRef = firebase.firestore().collection('productos')
+            .where('empresaId', '==', empresaId)
+            .orderBy('createdAt', 'desc');
+
+        const snapshot = await productosRef.get();
+        const listaProductos = document.getElementById('listaProductosEmpresa');
+        
+        // Actualizar título del modal
+        document.querySelector('#modalProductos .modal-title').textContent = `Productos de ${empresaNombre}`;
+        
+        if (snapshot.empty) {
+            listaProductos.innerHTML = '<p class="text-center">Esta empresa aún no tiene productos registrados</p>';
+        } else {
+            listaProductos.innerHTML = '';
+            snapshot.forEach(doc => {
+                const producto = doc.data();
+                const div = document.createElement('div');
+                div.className = 'card mb-3';
+                div.innerHTML = `
+                    <div class="card-body">
+                        <h5 class="card-title">${producto.nombre}</h5>
+                        <p class="card-text">
+                            <strong>Cantidad disponible:</strong> ${producto.cantidad}<br>
+                            <strong>Descripción:</strong> ${producto.descripcion}
+                        </p>
+                        <small class="text-muted">
+                            Actualizado: ${new Date(producto.updatedAt).toLocaleDateString()}
+                        </small>
+                    </div>
+                `;
+                listaProductos.appendChild(div);
+            });
+        }
+
+        modalProductos.show();
+    } catch (error) {
+        console.error('Error al cargar productos:', error);
+        mostrarAlerta('alertaError', 'Error al cargar los productos de la empresa');
+    }
 } 
