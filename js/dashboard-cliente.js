@@ -47,6 +47,10 @@ async function cargarEmpresas() {
                     <h5 class="mb-1">${empresa.nombre}</h5>
                     <p class="mb-1">${empresa.direccion}</p>
                     <small>Teléfono: ${empresa.telefono}</small>
+                    <div class="mt-2">
+                        ${mostrarEstrellas(empresa.promedioCalificacion || 0)}
+                        <small class="text-muted ms-2">(${empresa.totalResenas || 0} reseñas)</small>
+                    </div>
                 </div>
                 <div>
                     <button class="btn btn-primary" onclick="abrirModalResena('${doc.id}', '${empresa.nombre}')">
