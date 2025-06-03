@@ -166,7 +166,7 @@
     </div>
 
     <!-- Modal de Producto -->
-    <div class="modal fade" id="modalProducto" tabindex="-1" aria-labelledby="modalProductoLabel" aria-modal="true" role="dialog">
+    <div class="modal" id="modalProducto" tabindex="-1" data-bs-backdrop="static" role="dialog" aria-labelledby="modalProductoLabel">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -216,5 +216,21 @@
     <script src="js/auth.js"></script>
     <script src="js/dashboard-empresa.js"></script>
     <script src="js/productos.js"></script>
+    <script>
+        // Función para mostrar el estado de la empresa
+        function mostrarEstadoEmpresa(estado) {
+            const estadoElement = document.getElementById('estadoEmpresa');
+            if (estado === 'verified') {
+                estadoElement.textContent = 'Verificada';
+                estadoElement.className = 'badge bg-success';
+            } else if (estado === 'pending') {
+                estadoElement.textContent = 'Pendiente';
+                estadoElement.className = 'badge bg-warning text-dark';
+            } else {
+                estadoElement.textContent = 'Rechazada';
+                estadoElement.className = 'badge bg-danger';
+            }
+        }
+    </script>
 </body>
 </html> 
