@@ -372,7 +372,8 @@ async function registrarEmpresa(event) {
                 role: 'empresa',
                 createdAt: timestamp,
                 status: 'pending',
-                nombre: nombre
+                nombre: nombre,
+                tipo: 'empresa'
             };
 
             const empresaData = {
@@ -382,6 +383,7 @@ async function registrarEmpresa(event) {
                 direccion: direccion,
                 telefono: telefono,
                 email: email,
+                role: 'empresa',
                 status: 'pending',
                 createdAt: timestamp,
                 updatedAt: timestamp,
@@ -403,6 +405,23 @@ async function registrarEmpresa(event) {
             await user.updateProfile({
                 displayName: nombre
             });
+
+            // Actualizar claims personalizados para el rol de empresa
+            try {
+                // Crear una notificación para los administradores
+                await firebase.firestore().collection('notificaciones').add({
+                    tipo: 'nueva_empresa',
+                    titulo: 'Nueva Empresa Registrada',
+                    mensaje: `Se ha registrado una nueva empresa: ${nombre}`,
+                    destinatarioId: 'admin',
+                    createdAt: timestamp,
+                    leido: false,
+                    expiraEn: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+                });
+            } catch (notifError) {
+                console.error('Error al crear notificación:', notifError);
+                // No interrumpir el flujo si falla la notificación
+            }
 
             mostrarAlerta('alertaExito', '¡Registro exitoso! Redirigiendo al dashboard...');
             

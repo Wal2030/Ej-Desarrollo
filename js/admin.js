@@ -219,4 +219,45 @@ async function verificarIndices() {
         }
         return false;
     }
+}
+
+// Función para corregir roles de empresas
+async function corregirRolesEmpresas() {
+    try {
+        const empresasRef = firebase.firestore().collection('empresas');
+        const snapshot = await empresasRef.get();
+        
+        let actualizadas = 0;
+        for (const doc of snapshot.docs) {
+            const empresaData = doc.data();
+            const uid = empresaData.uid;
+            
+            if (!uid) continue;
+
+            // Obtener el documento de usuario correspondiente
+            const userDoc = await firebase.firestore().collection('users').doc(uid).get();
+            
+            if (userDoc.exists) {
+                const userData = userDoc.data();
+                if (userData.role !== 'empresa') {
+                    // Actualizar el rol a empresa
+                    await userDoc.ref.update({
+                        role: 'empresa',
+                        tipo: 'empresa',
+                        updatedAt: new Date().toISOString()
+                    });
+                    actualizadas++;
+                    console.log(`Rol corregido para usuario ${uid}`);
+                }
+            }
+        }
+
+        mostrarAlerta('alertaExito', `Se corrigieron los roles de ${actualizadas} empresas.`);
+        
+        // Recargar la lista de empresas
+        await cargarEmpresasPendientes();
+    } catch (error) {
+        console.error('Error al corregir roles:', error);
+        mostrarAlerta('alertaError', 'Error al corregir roles: ' + error.message);
+    }
 } 
