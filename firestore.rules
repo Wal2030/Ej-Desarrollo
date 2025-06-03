@@ -62,5 +62,17 @@ service cloud.firestore {
       // Permitir lectura y escritura si está autenticado
       allow read, write: if isAuthenticated();
     }
+
+    // Reglas para productos
+    match /productos/{productoId} {
+      // Permitir lectura pública de productos
+      allow read: if true;
+      // Permitir crear/actualizar productos si es la empresa propietaria
+      allow create, update: if isAuthenticated() && 
+        request.resource.data.empresaId == request.auth.uid;
+      // Permitir eliminar productos si es la empresa propietaria o admin
+      allow delete: if isAuthenticated() && 
+        (resource.data.empresaId == request.auth.uid || isAdmin());
+    }
   }
 } 
