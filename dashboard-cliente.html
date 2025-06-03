@@ -110,8 +110,15 @@
         // Esperar a que Firebase se inicialice
         window.addEventListener('load', () => {
             // Cargar datos del usuario
-            firebase.auth().onAuthStateChanged(user => {
+            firebase.auth().onAuthStateChanged(async user => {
                 if (user) {
+                    // Verificar rol
+                    const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
+                    if (!userDoc.exists || userDoc.data().role !== 'cliente') {
+                        window.location.href = '/';
+                        return;
+                    }
+
                     const nombreElement = document.querySelector('#nombreUsuario span');
                     nombreElement.textContent = user.displayName || user.email;
                     cargarEmpresas();
@@ -122,13 +129,13 @@
         });
 
         // Manejar búsqueda
-        document.getElementById('busqueda').addEventListener('input', (e) => {
-            // Implementar búsqueda en tiempo real
+        document.getElementById('busqueda').addEventListener('input', () => {
+            filtrarEmpresas();
         });
 
         // Manejar filtro de calificación
-        document.getElementById('filtroCalificacion').addEventListener('change', (e) => {
-            // Implementar filtrado por calificación
+        document.getElementById('filtroCalificacion').addEventListener('change', () => {
+            filtrarEmpresas();
         });
     </script>
 </body>

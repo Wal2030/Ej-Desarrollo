@@ -1,3 +1,288 @@
+// Variables globales
+let empresasFiltradas = [];
+let paginaActual = 1;
+const empresasPorPagina = 6;
+
+// Función para cargar empresas
+async function cargarEmpresas() {
+    try {
+        const empresasRef = firebase.firestore().collection('empresas')
+            .where('status', '==', 'verified');
+        
+        const snapshot = await empresasRef.get();
+        empresasFiltradas = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+
+        mostrarEmpresas();
+    } catch (error) {
+        console.error('Error al cargar empresas:', error);
+        mostrarAlerta('alertaError', 'Error al cargar las empresas');
+    }
+}
+
+// Función para mostrar empresas
+function mostrarEmpresas(pagina = 1) {
+    const container = document.getElementById('empresasContainer');
+    container.innerHTML = '';
+
+    if (empresasFiltradas.length === 0) {
+        container.innerHTML = `
+            <div class="col-12 text-center">
+                <p class="lead">No se encontraron empresas</p>
+            </div>
+        `;
+        return;
+    }
+
+    // Calcular índices para paginación
+    const inicio = (pagina - 1) * empresasPorPagina;
+    const fin = inicio + empresasPorPagina;
+    const empresasPagina = empresasFiltradas.slice(inicio, fin);
+
+    // Mostrar empresas
+    empresasPagina.forEach(empresa => {
+        const col = document.createElement('div');
+        col.className = 'col-md-4 mb-4';
+        col.innerHTML = `
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">${empresa.nombre}</h5>
+                    <p class="card-text">
+                        <small class="text-muted">
+                            <i class="fas fa-map-marker-alt"></i> ${empresa.direccion}
+                        </small>
+                    </p>
+                    <p class="card-text">
+                        <small class="text-muted">
+                            <i class="fas fa-phone"></i> ${empresa.telefono}
+                        </small>
+                    </p>
+                    <div class="rating-display mb-3">
+                        ${mostrarEstrellas(empresa.promedioCalificacion || 0)}
+                        <small class="text-muted ms-2">
+                            (${empresa.totalResenas || 0} reseñas)
+                        </small>
+                    </div>
+                    <button class="btn btn-primary w-100" 
+                            onclick="mostrarModalCalificacion('${empresa.id}', '${empresa.nombre}')">
+                        <i class="fas fa-star me-2"></i>Calificar
+                    </button>
+                </div>
+            </div>
+        `;
+        container.appendChild(col);
+    });
+
+    actualizarPaginacion(pagina);
+}
+
+// Función para mostrar estrellas
+function mostrarEstrellas(calificacion) {
+    let estrellas = '';
+    for (let i = 1; i <= 5; i++) {
+        if (i <= Math.round(calificacion)) {
+            estrellas += '<i class="fas fa-star text-warning"></i>';
+        } else {
+            estrellas += '<i class="far fa-star"></i>';
+        }
+    }
+    return estrellas;
+}
+
+// Función para actualizar paginación
+function actualizarPaginacion(pagina) {
+    const totalPaginas = Math.ceil(empresasFiltradas.length / empresasPorPagina);
+    const paginacion = document.querySelector('.pagination');
+    
+    let html = `
+        <li class="page-item ${pagina === 1 ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="cambiarPagina(${pagina - 1})">Anterior</a>
+        </li>
+    `;
+
+    for (let i = 1; i <= totalPaginas; i++) {
+        html += `
+            <li class="page-item ${i === pagina ? 'active' : ''}">
+                <a class="page-link" href="#" onclick="cambiarPagina(${i})">${i}</a>
+            </li>
+        `;
+    }
+
+    html += `
+        <li class="page-item ${pagina === totalPaginas ? 'disabled' : ''}">
+            <a class="page-link" href="#" onclick="cambiarPagina(${pagina + 1})">Siguiente</a>
+        </li>
+    `;
+
+    paginacion.innerHTML = html;
+}
+
+// Función para cambiar de página
+function cambiarPagina(pagina) {
+    if (pagina < 1 || pagina > Math.ceil(empresasFiltradas.length / empresasPorPagina)) {
+        return;
+    }
+    paginaActual = pagina;
+    mostrarEmpresas(pagina);
+}
+
+// Función para filtrar empresas
+function filtrarEmpresas() {
+    const busqueda = document.getElementById('busqueda').value.toLowerCase();
+    const calificacionMinima = parseFloat(document.getElementById('filtroCalificacion').value) || 0;
+
+    empresasFiltradas = empresasFiltradas.filter(empresa => {
+        const cumpleBusqueda = empresa.nombre.toLowerCase().includes(busqueda) ||
+                              empresa.direccion.toLowerCase().includes(busqueda);
+        const cumpleCalificacion = (empresa.promedioCalificacion || 0) >= calificacionMinima;
+        return cumpleBusqueda && cumpleCalificacion;
+    });
+
+    mostrarEmpresas(1);
+}
+
+// Función para mostrar modal de calificación
+function mostrarModalCalificacion(empresaId, empresaNombre) {
+    // Verificar si ya existe el modal
+    let modal = document.getElementById('modalCalificacion');
+    if (!modal) {
+        // Crear el modal si no existe
+        modal = document.createElement('div');
+        modal.id = 'modalCalificacion';
+        modal.className = 'modal fade';
+        modal.innerHTML = `
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Calificar Empresa</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="formCalificacion">
+                            <input type="hidden" id="empresaIdCalificacion">
+                            <div class="mb-3">
+                                <label class="form-label">Calificación</label>
+                                <div class="rating">
+                                    ${Array.from({length: 5}, (_, i) => `
+                                        <i class="far fa-star" data-rating="${i + 1}"></i>
+                                    `).join('')}
+                                </div>
+                                <input type="hidden" id="calificacionValor" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="comentario" class="form-label">Comentario</label>
+                                <textarea class="form-control" id="comentario" rows="3" required></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" onclick="enviarCalificacion()">
+                            Enviar Calificación
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // Configurar el sistema de calificación
+        const estrellas = modal.querySelectorAll('.rating i');
+        estrellas.forEach(estrella => {
+            estrella.addEventListener('click', () => {
+                const rating = estrella.dataset.rating;
+                document.getElementById('calificacionValor').value = rating;
+                estrellas.forEach(s => {
+                    if (s.dataset.rating <= rating) {
+                        s.classList.remove('far');
+                        s.classList.add('fas');
+                    } else {
+                        s.classList.remove('fas');
+                        s.classList.add('far');
+                    }
+                });
+            });
+        });
+    }
+
+    // Configurar el modal
+    document.getElementById('empresaIdCalificacion').value = empresaId;
+    document.querySelector('#modalCalificacion .modal-title').textContent = `Calificar a ${empresaNombre}`;
+    
+    // Mostrar el modal
+    const modalInstance = new bootstrap.Modal(modal);
+    modalInstance.show();
+}
+
+// Función para enviar calificación
+async function enviarCalificacion() {
+    try {
+        const empresaId = document.getElementById('empresaIdCalificacion').value;
+        const calificacion = parseInt(document.getElementById('calificacionValor').value);
+        const comentario = document.getElementById('comentario').value;
+
+        if (!calificacion || !comentario) {
+            throw new Error('Por favor completa todos los campos');
+        }
+
+        const user = firebase.auth().currentUser;
+        
+        // Crear la reseña
+        await firebase.firestore().collection('resenas').add({
+            empresaId,
+            usuarioId: user.uid,
+            usuarioNombre: user.displayName || user.email,
+            calificacion,
+            comentario,
+            createdAt: new Date().toISOString(),
+            status: 'active'
+        });
+
+        // Actualizar promedio de calificaciones de la empresa
+        const resenasRef = firebase.firestore().collection('resenas')
+            .where('empresaId', '==', empresaId)
+            .where('status', '==', 'active');
+        
+        const snapshot = await resenasRef.get();
+        let total = 0;
+        let count = 0;
+        
+        snapshot.forEach(doc => {
+            total += doc.data().calificacion;
+            count++;
+        });
+
+        const promedio = total / count;
+        
+        await firebase.firestore().collection('empresas').doc(empresaId).update({
+            promedioCalificacion: promedio,
+            totalResenas: count
+        });
+
+        // Cerrar modal y mostrar mensaje de éxito
+        bootstrap.Modal.getInstance(document.getElementById('modalCalificacion')).hide();
+        mostrarAlerta('alertaExito', 'Calificación enviada exitosamente');
+        
+        // Recargar empresas para actualizar la vista
+        await cargarEmpresas();
+    } catch (error) {
+        console.error('Error al enviar calificación:', error);
+        mostrarAlerta('alertaError', error.message);
+    }
+}
+
+// Función para mostrar alertas
+function mostrarAlerta(tipo, mensaje) {
+    const alerta = document.getElementById(tipo);
+    alerta.textContent = mensaje;
+    alerta.classList.remove('d-none');
+    setTimeout(() => {
+        alerta.classList.add('d-none');
+    }, 5000);
+}
+
 // Función para calificar una empresa
 async function calificarEmpresa(empresaId, calificacion, comentario) {
     try {

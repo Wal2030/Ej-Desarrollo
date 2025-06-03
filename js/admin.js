@@ -1,78 +1,83 @@
 // Función para hacer admin a un usuario
 async function hacerAdmin(email) {
     try {
-        // Buscar el usuario por email
-        const userQuery = await firebase.firestore().collection('users')
-            .where('email', '==', email)
-            .get();
-
-        if (userQuery.empty) {
-            throw new Error('Usuario no encontrado');
+        // Buscar usuario por email
+        const usersRef = firebase.firestore().collection('users');
+        const snapshot = await usersRef.where('email', '==', email).get();
+        
+        if (snapshot.empty) {
+            throw new Error('No se encontró ningún usuario con ese correo');
         }
 
-        const userDoc = userQuery.docs[0];
-        const userData = userDoc.data();
-
-        // Actualizar el rol a admin
-        await firebase.firestore().collection('users').doc(userDoc.id).update({
+        const userDoc = snapshot.docs[0];
+        await userDoc.ref.update({
             role: 'admin',
             updatedAt: new Date().toISOString()
         });
 
-        return { success: true, mensaje: `Usuario ${email} ahora es administrador` };
+        return {
+            success: true,
+            mensaje: `${email} ahora es administrador`
+        };
     } catch (error) {
         console.error('Error al hacer admin:', error);
-        throw error;
+        throw new Error('Error al asignar rol de administrador');
     }
 }
 
 // Función para obtener empresas pendientes
 async function obtenerEmpresasPendientes() {
     try {
-        const empresasQuery = await firebase.firestore().collection('empresas')
-            .where('status', '==', 'pending')
-            .get();
-
-        const empresas = [];
-        empresasQuery.forEach(doc => {
-            empresas.push({
-                id: doc.id,
-                ...doc.data()
-            });
-        });
-
-        return empresas;
+        const empresasRef = firebase.firestore().collection('empresas');
+        const snapshot = await empresasRef.where('status', '==', 'pending').get();
+        
+        return snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
     } catch (error) {
         console.error('Error al obtener empresas pendientes:', error);
-        throw error;
+        throw new Error('Error al cargar empresas pendientes');
     }
 }
 
-// Función para aprobar o rechazar una empresa
+// Función para gestionar empresa (aprobar/rechazar)
 async function gestionarEmpresa(empresaId, accion, motivo = '') {
     try {
         const empresaRef = firebase.firestore().collection('empresas').doc(empresaId);
-        const userRef = firebase.firestore().collection('users').doc(empresaId);
-
         const empresa = await empresaRef.get();
+
         if (!empresa.exists) {
             throw new Error('Empresa no encontrada');
         }
 
-        const nuevoStatus = accion === 'aprobar' ? 'active' : 'rejected';
-        const timestamp = new Date().toISOString();
+        const actualizacion = {
+            status: accion === 'aprobar' ? 'verified' : 'rejected',
+            updatedAt: new Date().toISOString(),
+            verificadoPor: {
+                uid: firebase.auth().currentUser.uid,
+                email: firebase.auth().currentUser.email,
+                fecha: new Date().toISOString()
+            }
+        };
 
-        // Actualizar empresa
-        await empresaRef.update({
-            status: nuevoStatus,
-            updatedAt: timestamp,
-            ...(motivo && { motivoRechazo: motivo })
-        });
+        if (accion === 'rechazar') {
+            actualizacion.motivoRechazo = motivo;
+        }
 
-        // Actualizar usuario
-        await userRef.update({
-            status: nuevoStatus,
-            updatedAt: timestamp
+        await empresaRef.update(actualizacion);
+
+        // Crear notificación para la empresa
+        await firebase.firestore().collection('notificaciones').add({
+            tipo: accion === 'aprobar' ? 'empresa_aprobada' : 'empresa_rechazada',
+            titulo: accion === 'aprobar' ? 'Empresa Verificada' : 'Verificación Rechazada',
+            mensaje: accion === 'aprobar' 
+                ? 'Tu empresa ha sido verificada exitosamente' 
+                : `Tu verificación ha sido rechazada. Motivo: ${motivo}`,
+            destinatarioId: empresaId,
+            createdAt: new Date().toISOString(),
+            leido: false,
+            expiraEn: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
         });
 
         return {
@@ -81,6 +86,6 @@ async function gestionarEmpresa(empresaId, accion, motivo = '') {
         };
     } catch (error) {
         console.error('Error al gestionar empresa:', error);
-        throw error;
+        throw new Error(`Error al ${accion} la empresa`);
     }
 } 
