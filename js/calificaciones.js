@@ -230,7 +230,7 @@ async function enviarCalificacion() {
         const user = firebase.auth().currentUser;
         
         // Crear la reseña
-        await firebase.firestore().collection('resenas').add({
+        const resenaRef = await firebase.firestore().collection('resenas').add({
             empresaId,
             usuarioId: user.uid,
             usuarioNombre: user.displayName || user.email,
@@ -241,24 +241,36 @@ async function enviarCalificacion() {
         });
 
         // Actualizar promedio de calificaciones de la empresa
-        const resenasRef = firebase.firestore().collection('resenas')
-            .where('empresaId', '==', empresaId)
-            .where('status', '==', 'active');
+        const empresaRef = firebase.firestore().collection('empresas').doc(empresaId);
         
-        const snapshot = await resenasRef.get();
-        let total = 0;
-        let count = 0;
-        
-        snapshot.forEach(doc => {
-            total += doc.data().calificacion;
-            count++;
-        });
+        await firebase.firestore().runTransaction(async (transaction) => {
+            const empresaDoc = await transaction.get(empresaRef);
+            if (!empresaDoc.exists) {
+                throw new Error('La empresa no existe');
+            }
 
-        const promedio = total / count;
-        
-        await firebase.firestore().collection('empresas').doc(empresaId).update({
-            promedioCalificacion: promedio,
-            totalResenas: count
+            const empresaData = empresaDoc.data();
+            const totalResenas = (empresaData.totalResenas || 0) + 1;
+            const sumaCalificaciones = (empresaData.sumaCalificaciones || 0) + calificacion;
+            const promedioCalificacion = sumaCalificaciones / totalResenas;
+
+            transaction.update(empresaRef, {
+                totalResenas,
+                sumaCalificaciones,
+                promedioCalificacion
+            });
+
+            // Crear notificación para la empresa
+            const notificacionRef = firebase.firestore().collection('notificaciones').doc();
+            transaction.set(notificacionRef, {
+                tipo: 'nueva_resena',
+                titulo: 'Nueva reseña recibida',
+                mensaje: `Has recibido una nueva reseña con calificación de ${calificacion} estrellas`,
+                destinatarioId: empresaId,
+                createdAt: new Date().toISOString(),
+                leido: false,
+                expiraEn: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+            });
         });
 
         // Cerrar modal y mostrar mensaje de éxito
