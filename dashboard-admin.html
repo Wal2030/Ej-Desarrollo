@@ -88,7 +88,7 @@
                                 <thead>
                                     <tr>
                                         <th>Nombre</th>
-                                        <th>RUC</th>
+                                        <th>RUT</th>
                                         <th>Email</th>
                                         <th>Documentos</th>
                                         <th>Fecha</th>
@@ -199,9 +199,9 @@
                             ${empresa.documentosVerificacion ? `
                                 ${empresa.documentosVerificacion.rucDoc ? `
                                     <a href="${empresa.documentosVerificacion.rucDoc}" target="_blank" class="btn btn-sm btn-info">
-                                        <i class="fas fa-file-alt"></i> RUC
+                                        <i class="fas fa-file-alt"></i> RUT
                                     </a>
-                                ` : '<span class="badge bg-warning">Sin RUC</span>'}
+                                ` : '<span class="badge bg-warning">Sin RUT</span>'}
                                 ${empresa.documentosVerificacion.licenciaFuncionamiento ? `
                                     <a href="${empresa.documentosVerificacion.licenciaFuncionamiento}" target="_blank" class="btn btn-sm btn-info">
                                         <i class="fas fa-file-alt"></i> Licencia
