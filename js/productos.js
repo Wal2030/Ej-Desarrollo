@@ -8,8 +8,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Función para mostrar el modal de producto
 function mostrarModalProducto(productoId = null) {
-    // Limpiar el formulario
+    // Limpiar el formulario y las alertas
     document.getElementById('formProducto').reset();
+    document.getElementById('alertaModalError').classList.add('d-none');
+    document.getElementById('alertaModalExito').classList.add('d-none');
     
     // Si se proporciona un ID, cargar los datos del producto para edición
     if (productoId) {
@@ -23,10 +25,11 @@ function mostrarModalProducto(productoId = null) {
 async function guardarProducto() {
     try {
         const nombre = document.getElementById('nombreProducto').value.trim();
+        const precio = parseFloat(document.getElementById('precioProducto').value);
         const cantidad = parseInt(document.getElementById('cantidadProducto').value);
         const descripcion = document.getElementById('descripcionProducto').value.trim();
 
-        if (!nombre || !cantidad || !descripcion) {
+        if (!nombre || !precio || !cantidad || !descripcion) {
             throw new Error('Por favor, completa todos los campos');
         }
 
@@ -37,6 +40,7 @@ async function guardarProducto() {
 
         const producto = {
             nombre,
+            precio,
             cantidad,
             descripcion,
             empresaId: user.uid,
@@ -46,12 +50,17 @@ async function guardarProducto() {
 
         await firebase.firestore().collection('productos').add(producto);
 
-        modalProducto.hide();
-        mostrarAlerta('alertaExito', 'Producto guardado exitosamente');
-        cargarProductos();
+        // Mostrar mensaje de éxito en el modal
+        mostrarAlertaModal('alertaModalExito', 'Producto guardado exitosamente');
+        
+        // Cerrar el modal después de 1.5 segundos
+        setTimeout(() => {
+            modalProducto.hide();
+            cargarProductos();
+        }, 1500);
     } catch (error) {
         console.error('Error al guardar producto:', error);
-        mostrarAlerta('alertaError', error.message);
+        mostrarAlertaModal('alertaModalError', error.message);
     }
 }
 
@@ -89,6 +98,7 @@ async function cargarProductos() {
                         </div>
                     </div>
                     <p class="card-text">
+                        <strong>Precio:</strong> $${producto.precio.toFixed(2)}<br>
                         <strong>Cantidad:</strong> ${producto.cantidad}<br>
                         <strong>Descripción:</strong> ${producto.descripcion}
                     </p>
@@ -121,12 +131,23 @@ async function eliminarProducto(productoId) {
     }
 }
 
-// Función para mostrar alertas
+// Función para mostrar alertas en el modal
+function mostrarAlertaModal(tipo, mensaje) {
+    const alerta = document.getElementById(tipo);
+    if (alerta) {
+        alerta.textContent = mensaje;
+        alerta.classList.remove('d-none');
+    }
+}
+
+// Función para mostrar alertas generales
 function mostrarAlerta(tipo, mensaje) {
     const alerta = document.getElementById(tipo);
-    alerta.textContent = mensaje;
-    alerta.classList.remove('d-none');
-    setTimeout(() => {
-        alerta.classList.add('d-none');
-    }, 5000);
+    if (alerta) {
+        alerta.textContent = mensaje;
+        alerta.classList.remove('d-none');
+        setTimeout(() => {
+            alerta.classList.add('d-none');
+        }, 5000);
+    }
 } 

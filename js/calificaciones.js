@@ -446,7 +446,7 @@ async function verProductos(empresaId, empresaNombre) {
         document.querySelector('#modalProductos .modal-title').textContent = `Productos de ${empresaNombre}`;
         
         if (snapshot.empty) {
-            listaProductos.innerHTML = '<p class="text-center">Esta empresa aún no tiene productos registrados</p>';
+            listaProductos.innerHTML = '<div class="alert alert-info">Esta empresa aún no tiene productos registrados</div>';
         } else {
             listaProductos.innerHTML = '';
             snapshot.forEach(doc => {
@@ -457,6 +457,7 @@ async function verProductos(empresaId, empresaNombre) {
                     <div class="card-body">
                         <h5 class="card-title">${producto.nombre}</h5>
                         <p class="card-text">
+                            <strong>Precio:</strong> $${producto.precio ? producto.precio.toFixed(2) : '0.00'}<br>
                             <strong>Cantidad disponible:</strong> ${producto.cantidad}<br>
                             <strong>Descripción:</strong> ${producto.descripcion}
                         </p>

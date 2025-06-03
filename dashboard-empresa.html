@@ -180,6 +180,13 @@
                             <input type="text" class="form-control" id="nombreProducto" required>
                         </div>
                         <div class="mb-3">
+                            <label for="precioProducto" class="form-label">Precio</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" class="form-control" id="precioProducto" required min="0" step="0.01">
+                            </div>
+                        </div>
+                        <div class="mb-3">
                             <label for="cantidadProducto" class="form-label">Cantidad</label>
                             <input type="number" class="form-control" id="cantidadProducto" required min="0">
                         </div>
@@ -187,6 +194,9 @@
                             <label for="descripcionProducto" class="form-label">Descripción</label>
                             <textarea class="form-control" id="descripcionProducto" rows="3" required></textarea>
                         </div>
+                        <!-- Alertas del modal -->
+                        <div id="alertaModalError" class="alert alert-danger d-none" role="alert"></div>
+                        <div id="alertaModalExito" class="alert alert-success d-none" role="alert"></div>
                     </form>
                 </div>
                 <div class="modal-footer">
