@@ -286,4 +286,9 @@ async function marcarLeida(notifId) {
     } catch (error) {
         console.error('Error al marcar notificación como leída:', error);
     }
+}
+
+// Mostrar perfil
+function mostrarPerfil() {
+    editarPerfil(); // Reutilizamos la función existente que ya muestra el modal con los datos
 } 

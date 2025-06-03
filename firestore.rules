@@ -1,26 +1,70 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Función para verificar si el usuario está autenticado
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
     // Función para verificar si el usuario es admin
     function isAdmin() {
-      return request.auth != null && 
+      return isAuthenticated() && 
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "admin";
+    }
+
+    // Función para verificar si es el propietario
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
     }
 
     // Reglas para usuarios
     match /users/{userId} {
-      allow read: if true;  // Permitir lectura para verificar emails
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && 
-                          (request.auth.uid == userId || isAdmin());
+      // Permitir lectura pública para verificar emails y roles
+      allow read: if true;
+      // Permitir creación si está autenticado
+      allow create: if isAuthenticated();
+      // Permitir actualización/eliminación si es propietario o admin
+      allow update, delete: if isOwner(userId) || isAdmin();
     }
 
     // Reglas para empresas
     match /empresas/{empresaId} {
+      // Permitir lectura pública para listar empresas
       allow read: if true;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth != null && 
-                          (request.auth.uid == empresaId || isAdmin());
+      // Permitir creación si está autenticado y es su propio documento
+      allow create: if isAuthenticated() && request.auth.uid == empresaId;
+      // Permitir actualización/eliminación si es propietario o admin
+      allow update, delete: if isOwner(empresaId) || isAdmin();
+    }
+
+    // Reglas para reseñas
+    match /resenas/{resenaId} {
+      // Permitir lectura pública de reseñas
+      allow read: if true;
+      // Permitir crear reseñas si está autenticado
+      allow create: if isAuthenticated();
+      // Permitir actualización si es el autor de la reseña, la empresa reseñada o admin
+      allow update: if isAuthenticated() && 
+                   (request.auth.uid == resource.data.usuarioId || 
+                    request.auth.uid == resource.data.empresaId ||
+                    isAdmin());
+      // Solo el admin puede eliminar reseñas
+      allow delete: if isAdmin();
+    }
+
+    // Reglas para notificaciones
+    match /notificaciones/{notifId} {
+      // Permitir lectura si es el destinatario o es una notificación global
+      allow read: if isAuthenticated() && 
+                 (request.auth.uid == resource.data.destinatarioId || 
+                  resource.data.destinatarioId == "all");
+      // Permitir crear notificaciones si está autenticado
+      allow create: if isAuthenticated();
+      // Permitir actualizar si es el destinatario (para marcar como leída)
+      allow update: if isAuthenticated() && 
+                   (request.auth.uid == resource.data.destinatarioId);
+      // Solo el admin puede eliminar notificaciones
+      allow delete: if isAdmin();
     }
   }
 } 
