@@ -29,7 +29,10 @@ async function hacerAdmin(email) {
 async function obtenerEmpresasPendientes() {
     try {
         const empresasRef = firebase.firestore().collection('empresas');
-        const snapshot = await empresasRef.where('status', '==', 'pending').get();
+        const snapshot = await empresasRef
+            .where('status', '==', 'pending')
+            .orderBy('createdAt', 'desc')
+            .get();
         
         return snapshot.docs.map(doc => ({
             id: doc.id,
@@ -87,5 +90,45 @@ async function gestionarEmpresa(empresaId, accion, motivo = '') {
     } catch (error) {
         console.error('Error al gestionar empresa:', error);
         throw new Error(`Error al ${accion} la empresa`);
+    }
+}
+
+// Función para arreglar timestamps de empresas
+async function arreglarTimestamps() {
+    try {
+        const empresasRef = firebase.firestore().collection('empresas');
+        const snapshot = await empresasRef.get();
+
+        let actualizadas = 0;
+        for (const doc of snapshot.docs) {
+            const data = doc.data();
+            if (!data.createdAt) {
+                await doc.ref.update({
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    status: data.status || 'pending' // Aseguramos que tenga un status
+                });
+                actualizadas++;
+                console.log(`Timestamp agregado a empresa ${doc.id}`);
+            }
+        }
+        mostrarAlerta('alertaExito', `Proceso completado. ${actualizadas} empresas actualizadas.`);
+    } catch (error) {
+        console.error('Error:', error);
+        mostrarAlerta('alertaError', 'Error al actualizar timestamps: ' + error.message);
+    }
+}
+
+// Función para mostrar alertas
+function mostrarAlerta(tipo, mensaje) {
+    const alerta = document.getElementById(tipo);
+    if (alerta) {
+        alerta.textContent = mensaje;
+        alerta.classList.remove('d-none');
+        setTimeout(() => {
+            alerta.classList.add('d-none');
+        }, 5000);
+    } else {
+        console.log(mensaje);
     }
 } 
