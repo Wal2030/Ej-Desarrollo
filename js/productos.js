@@ -1,5 +1,6 @@
 // Variables globales
 let modalProducto;
+let productoEnEdicion = null;
 
 // Inicializar elementos cuando el documento esté listo
 document.addEventListener('DOMContentLoaded', () => {
@@ -13,12 +14,36 @@ function mostrarModalProducto(productoId = null) {
     document.getElementById('alertaModalError').classList.add('d-none');
     document.getElementById('alertaModalExito').classList.add('d-none');
     
-    // Si se proporciona un ID, cargar los datos del producto para edición
+    productoEnEdicion = productoId;
+    const modalTitle = document.getElementById('modalProductoLabel');
+    
     if (productoId) {
+        modalTitle.textContent = 'Editar Producto';
         cargarDatosProducto(productoId);
+    } else {
+        modalTitle.textContent = 'Agregar Producto';
     }
     
     modalProducto.show();
+}
+
+// Función para cargar datos de un producto para edición
+async function cargarDatosProducto(productoId) {
+    try {
+        const doc = await firebase.firestore().collection('productos').doc(productoId).get();
+        if (!doc.exists) {
+            throw new Error('El producto no existe');
+        }
+
+        const producto = doc.data();
+        document.getElementById('nombreProducto').value = producto.nombre;
+        document.getElementById('precioProducto').value = producto.precio;
+        document.getElementById('cantidadProducto').value = producto.cantidad;
+        document.getElementById('descripcionProducto').value = producto.descripcion;
+    } catch (error) {
+        console.error('Error al cargar producto:', error);
+        mostrarAlertaModal('alertaModalError', 'Error al cargar los datos del producto');
+    }
 }
 
 // Función para guardar un producto
@@ -35,7 +60,7 @@ async function guardarProducto() {
 
         const user = firebase.auth().currentUser;
         if (!user) {
-            throw new Error('Debes iniciar sesión para agregar productos');
+            throw new Error('Debes iniciar sesión para gestionar productos');
         }
 
         const producto = {
@@ -44,14 +69,19 @@ async function guardarProducto() {
             cantidad,
             descripcion,
             empresaId: user.uid,
-            createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
         };
 
-        await firebase.firestore().collection('productos').add(producto);
-
-        // Mostrar mensaje de éxito en el modal
-        mostrarAlertaModal('alertaModalExito', 'Producto guardado exitosamente');
+        if (!productoEnEdicion) {
+            // Crear nuevo producto
+            producto.createdAt = new Date().toISOString();
+            await firebase.firestore().collection('productos').add(producto);
+            mostrarAlertaModal('alertaModalExito', 'Producto guardado exitosamente');
+        } else {
+            // Actualizar producto existente
+            await firebase.firestore().collection('productos').doc(productoEnEdicion).update(producto);
+            mostrarAlertaModal('alertaModalExito', 'Producto actualizado exitosamente');
+        }
         
         // Cerrar el modal después de 1.5 segundos
         setTimeout(() => {
@@ -107,6 +137,9 @@ async function cargarProductos() {
                     <div class="d-flex justify-content-between align-items-center">
                         <h5 class="card-title">${producto.nombre}</h5>
                         <div>
+                            <button class="btn btn-sm btn-primary me-2" onclick="mostrarModalProducto('${doc.id}')" aria-label="Editar ${producto.nombre}">
+                                <i class="fas fa-edit"></i>
+                            </button>
                             <button class="btn btn-sm btn-danger" onclick="eliminarProducto('${doc.id}')" aria-label="Eliminar ${producto.nombre}">
                                 <i class="fas fa-trash"></i>
                             </button>
