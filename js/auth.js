@@ -350,19 +350,39 @@ async function registrarEmpresa(event) {
     event.preventDefault();
     
     try {
-        // Obtener valores del formulario
-        const email = document.getElementById('emailEmpresa').value;
-        const password = document.getElementById('passwordEmpresa').value;
-        const nombre = document.getElementById('nombreEmpresa').value;
-        const ruc = document.getElementById('rucEmpresa').value;
-        const direccion = document.getElementById('direccionEmpresa').value;
-        const telefono = document.getElementById('telefonoEmpresa').value;
-        const rucDoc = document.getElementById('rucDoc').files[0];
-        const licenciaDoc = document.getElementById('licenciaDoc').files[0];
+        // Obtener elementos del formulario
+        const emailInput = document.getElementById('emailEmpresa');
+        const passwordInput = document.getElementById('passwordEmpresa');
+        const nombreInput = document.getElementById('nombreEmpresa');
+        const rucInput = document.getElementById('rucEmpresa');
+        const direccionInput = document.getElementById('direccionEmpresa');
+        const telefonoInput = document.getElementById('telefonoEmpresa');
+        const rucDocInput = document.getElementById('rucDoc');
+        const licenciaDocInput = document.getElementById('licenciaDoc');
+
+        // Verificar que todos los elementos existan
+        if (!emailInput || !passwordInput || !nombreInput || !rucInput || 
+            !direccionInput || !telefonoInput || !rucDocInput || !licenciaDocInput) {
+            throw new Error('Error al encontrar los elementos del formulario');
+        }
+
+        // Obtener valores
+        const email = emailInput.value.trim();
+        const password = passwordInput.value;
+        const nombre = nombreInput.value.trim();
+        const ruc = rucInput.value.trim();
+        const direccion = direccionInput.value.trim();
+        const telefono = telefonoInput.value.trim();
+        const rucDoc = rucDocInput.files[0];
+        const licenciaDoc = licenciaDocInput.files[0];
 
         // Validar campos requeridos
-        if (!email || !password || !nombre || !ruc || !direccion || !telefono || !rucDoc || !licenciaDoc) {
-            throw new Error('Por favor complete todos los campos y suba los documentos requeridos');
+        if (!email || !password || !nombre || !ruc || !direccion || !telefono) {
+            throw new Error('Por favor complete todos los campos');
+        }
+
+        if (!rucDoc || !licenciaDoc) {
+            throw new Error('Por favor suba los documentos requeridos (RUT y Licencia)');
         }
 
         // Crear usuario en Authentication

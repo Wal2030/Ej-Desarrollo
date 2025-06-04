@@ -59,48 +59,33 @@
                                 </button>
                             </div>
                         </div>
-                        
-                        <!-- Sección de Mantenimiento -->
-                        <div class="mb-4">
-                            <h4>Mantenimiento del Sistema</h4>
-                            <div class="d-grid gap-2">
-                                <small class="text-muted d-block mt-2">
-                                    Panel de administración del sistema
-                                </small>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Lista de Empresas Pendientes -->
-        <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body">
-                        <h3 class="card-title mb-4">
-                            <i class="fas fa-clock me-2"></i>
-                            Empresas Pendientes de Verificación
-                        </h3>
-                        <div id="empresasPendientes" class="table-responsive">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>Nombre</th>
-                                        <th>RUT</th>
-                                        <th>Email</th>
-                                        <th>Documentos</th>
-                                        <th>Fecha</th>
-                                        <th>Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="empresasPendientesList">
-                                    <!-- Las empresas se cargarán aquí -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+        <div class="card mb-4">
+            <div class="card-header">
+                <h3>Empresas Pendientes de Verificación</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>RUT</th>
+                                <th>Email</th>
+                                <th>Documentos</th>
+                                <th>Fecha</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="empresasPendientesList">
+                            <!-- Las empresas se cargarán dinámicamente -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -130,15 +115,12 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
-    <!-- Custom JS -->
     <script src="js/firebase-config.js"></script>
     <script src="js/auth.js"></script>
-    <script src="js/admin.js"></script>
     <script>
         let empresaSeleccionada = null;
         const modalRechazo = new bootstrap.Modal(document.getElementById('modalRechazo'));
@@ -159,22 +141,6 @@
             }
         });
 
-        // Función para hacer admin
-        async function hacerAdminHandler() {
-            try {
-                const email = document.getElementById('emailAdmin').value;
-                if (!email) {
-                    throw new Error('Por favor, ingresa un correo electrónico');
-                }
-                
-                const resultado = await hacerAdmin(email);
-                mostrarAlerta('alertaExito', resultado.mensaje);
-                document.getElementById('emailAdmin').value = '';
-            } catch (error) {
-                mostrarAlerta('alertaError', error.message);
-            }
-        }
-
         // Función para cargar empresas pendientes
         async function cargarEmpresasPendientes() {
             try {
@@ -182,73 +148,83 @@
                     .where('status', '==', 'pending')
                     .get();
 
-                const container = document.getElementById('empresasPendientes');
-                const template = document.getElementById('empresaPendienteTemplate');
-                container.innerHTML = '';
-
+                const tbody = document.getElementById('empresasPendientesList');
+                
                 if (snapshot.empty) {
-                    container.innerHTML = '<div class="alert alert-info">No hay empresas pendientes de verificación</div>';
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center">No hay empresas pendientes de verificación</td>
+                        </tr>
+                    `;
                     return;
                 }
 
+                tbody.innerHTML = '';
                 snapshot.forEach(doc => {
                     const empresa = doc.data();
-                    const card = template.content.cloneNode(true);
-                    
-                    // Llenar datos básicos
-                    card.querySelector('.card-title').textContent = empresa.nombre;
-                    card.querySelector('.ruc').textContent = empresa.ruc;
-                    card.querySelector('.email').textContent = empresa.email;
-                    card.querySelector('.direccion').textContent = empresa.direccion;
-                    card.querySelector('.telefono').textContent = empresa.telefono;
-
-                    // Configurar botones
-                    card.querySelector('.verificar-btn').dataset.id = doc.id;
-                    card.querySelector('.actualizar-rol-btn').dataset.userId = doc.id;
-                    card.querySelector('.rechazar-btn').dataset.id = doc.id;
-
-                    // Configurar enlaces de documentos
-                    const rucLink = card.querySelector('.ver-ruc');
-                    const licenciaLink = card.querySelector('.ver-licencia');
-                    
-                    if (empresa.rucUrl) {
-                        rucLink.href = empresa.rucUrl;
-                        rucLink.target = '_blank';
-                    } else {
-                        rucLink.classList.add('disabled');
-                    }
-
-                    if (empresa.licenciaUrl) {
-                        licenciaLink.href = empresa.licenciaUrl;
-                        licenciaLink.target = '_blank';
-                    } else {
-                        licenciaLink.classList.add('disabled');
-                    }
-
-                    container.appendChild(card);
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${empresa.nombre}</td>
+                        <td>${empresa.ruc}</td>
+                        <td>${empresa.email}</td>
+                        <td>
+                            ${empresa.rucUrl ? `
+                                <a href="${empresa.rucUrl}" target="_blank" class="btn btn-sm btn-info me-2">
+                                    <i class="fas fa-file-alt"></i> RUT
+                                </a>
+                            ` : '<span class="badge bg-warning">Sin RUT</span>'}
+                            ${empresa.licenciaUrl ? `
+                                <a href="${empresa.licenciaUrl}" target="_blank" class="btn btn-sm btn-info">
+                                    <i class="fas fa-file-alt"></i> Licencia
+                                </a>
+                            ` : '<span class="badge bg-warning">Sin Licencia</span>'}
+                        </td>
+                        <td>${new Date(empresa.createdAt).toLocaleDateString()}</td>
+                        <td>
+                            <div class="btn-group">
+                                <button class="btn btn-success btn-sm" onclick="verificarEmpresa('${doc.id}')">
+                                    <i class="fas fa-check"></i> Verificar
+                                </button>
+                                <button class="btn btn-warning btn-sm" onclick="actualizarRolAEmpresa('${doc.id}')">
+                                    <i class="fas fa-user-tag"></i> Rol
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="rechazarEmpresa('${doc.id}')">
+                                    <i class="fas fa-times"></i> Rechazar
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
                 });
             } catch (error) {
-                console.error('Error al cargar empresas pendientes:', error);
+                console.error('Error al cargar empresas:', error);
                 mostrarAlerta('alertaError', 'Error al cargar las empresas pendientes');
             }
         }
 
-        // Funciones para aprobar/rechazar empresas
-        async function aprobarEmpresa(empresaId) {
+        // Función para verificar empresa
+        async function verificarEmpresa(empresaId) {
             try {
-                await gestionarEmpresa(empresaId, 'aprobar');
-                mostrarAlerta('alertaExito', 'Empresa aprobada exitosamente');
+                await firebase.firestore().collection('empresas').doc(empresaId).update({
+                    status: 'verified',
+                    updatedAt: new Date().toISOString()
+                });
+
+                mostrarAlerta('alertaExito', 'Empresa verificada exitosamente');
                 cargarEmpresasPendientes();
             } catch (error) {
-                mostrarAlerta('alertaError', error.message);
+                console.error('Error al verificar empresa:', error);
+                mostrarAlerta('alertaError', 'Error al verificar la empresa');
             }
         }
 
+        // Función para rechazar empresa
         function rechazarEmpresa(empresaId) {
             empresaSeleccionada = empresaId;
             modalRechazo.show();
         }
 
+        // Función para confirmar rechazo
         async function confirmarRechazo() {
             try {
                 const motivo = document.getElementById('motivoRechazo').value;
@@ -256,12 +232,48 @@
                     throw new Error('Por favor, ingresa un motivo de rechazo');
                 }
 
-                await gestionarEmpresa(empresaSeleccionada, 'rechazar', motivo);
+                await firebase.firestore().collection('empresas').doc(empresaSeleccionada).update({
+                    status: 'rejected',
+                    motivoRechazo: motivo,
+                    updatedAt: new Date().toISOString()
+                });
+
                 modalRechazo.hide();
                 document.getElementById('motivoRechazo').value = '';
                 mostrarAlerta('alertaExito', 'Empresa rechazada exitosamente');
                 cargarEmpresasPendientes();
             } catch (error) {
+                console.error('Error al rechazar empresa:', error);
+                mostrarAlerta('alertaError', 'Error al rechazar la empresa');
+            }
+        }
+
+        // Función para hacer admin
+        async function hacerAdminHandler() {
+            try {
+                const email = document.getElementById('emailAdmin').value;
+                if (!email) {
+                    throw new Error('Por favor, ingresa un correo electrónico');
+                }
+
+                // Buscar usuario por email
+                const userQuery = await firebase.firestore().collection('users')
+                    .where('email', '==', email)
+                    .get();
+
+                if (userQuery.empty) {
+                    throw new Error('No se encontró ningún usuario con ese correo');
+                }
+
+                const userDoc = userQuery.docs[0];
+                await firebase.firestore().collection('users').doc(userDoc.id).update({
+                    role: 'admin'
+                });
+
+                mostrarAlerta('alertaExito', 'Usuario actualizado a administrador exitosamente');
+                document.getElementById('emailAdmin').value = '';
+            } catch (error) {
+                console.error('Error:', error);
                 mostrarAlerta('alertaError', error.message);
             }
         }
