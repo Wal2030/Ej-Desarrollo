@@ -5,6 +5,13 @@ let productoEnEdicion = null;
 // Inicializar elementos cuando el documento esté listo
 document.addEventListener('DOMContentLoaded', () => {
     modalProducto = new bootstrap.Modal(document.getElementById('modalProducto'));
+    
+    // Verificar autenticación y cargar productos
+    firebase.auth().onAuthStateChanged(user => {
+        if (user) {
+            cargarProductos();
+        }
+    });
 });
 
 // Función para mostrar el modal de producto
@@ -99,7 +106,7 @@ async function cargarProductos() {
     try {
         const user = firebase.auth().currentUser;
         if (!user) {
-            mostrarAlerta('alertaError', 'Debes iniciar sesión para ver los productos');
+            console.warn('No hay usuario autenticado');
             return;
         }
 
@@ -112,51 +119,62 @@ async function cargarProductos() {
         // Mostrar mensaje de carga
         listaProductos.innerHTML = '<div class="text-center"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Cargando...</span></div></div>';
 
+        // Crear el índice compuesto si no existe
         const productosRef = firebase.firestore().collection('productos')
             .where('empresaId', '==', user.uid)
             .orderBy('createdAt', 'desc');
 
-        const snapshot = await productosRef.get();
-        
-        if (snapshot.empty) {
-            listaProductos.innerHTML = `
-                <div class="alert alert-info text-center" role="alert">
-                    <i class="fas fa-box me-2"></i>
-                    No hay productos registrados. ¡Agrega tu primer producto!
-                </div>`;
-            return;
-        }
+        // Suscribirse a cambios en tiempo real
+        productosRef.onSnapshot(snapshot => {
+            if (snapshot.empty) {
+                listaProductos.innerHTML = `
+                    <div class="alert alert-info text-center" role="alert">
+                        <i class="fas fa-box me-2"></i>
+                        No hay productos registrados. ¡Agrega tu primer producto!
+                    </div>`;
+                return;
+            }
 
-        listaProductos.innerHTML = '';
-        snapshot.forEach(doc => {
-            const producto = doc.data();
-            const div = document.createElement('div');
-            div.className = 'card mb-3';
-            div.innerHTML = `
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="card-title">${producto.nombre}</h5>
-                        <div>
-                            <button class="btn btn-sm btn-primary me-2" onclick="mostrarModalProducto('${doc.id}')" aria-label="Editar ${producto.nombre}">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="btn btn-sm btn-danger" onclick="eliminarProducto('${doc.id}')" aria-label="Eliminar ${producto.nombre}">
-                                <i class="fas fa-trash"></i>
-                            </button>
+            listaProductos.innerHTML = '';
+            snapshot.forEach(doc => {
+                const producto = doc.data();
+                const div = document.createElement('div');
+                div.className = 'card mb-3';
+                div.innerHTML = `
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="card-title">${producto.nombre}</h5>
+                            <div>
+                                <button class="btn btn-sm btn-primary me-2" onclick="mostrarModalProducto('${doc.id}')" aria-label="Editar ${producto.nombre}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger" onclick="eliminarProducto('${doc.id}')" aria-label="Eliminar ${producto.nombre}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
                         </div>
+                        <p class="card-text">
+                            <strong>Precio:</strong> $${producto.precio.toFixed(2)}<br>
+                            <strong>Cantidad:</strong> ${producto.cantidad}<br>
+                            <strong>Descripción:</strong> ${producto.descripcion}
+                        </p>
+                        <small class="text-muted">
+                            Actualizado: ${new Date(producto.updatedAt).toLocaleDateString()}
+                        </small>
                     </div>
-                    <p class="card-text">
-                        <strong>Precio:</strong> $${producto.precio.toFixed(2)}<br>
-                        <strong>Cantidad:</strong> ${producto.cantidad}<br>
-                        <strong>Descripción:</strong> ${producto.descripcion}
-                    </p>
-                    <small class="text-muted">
-                        Actualizado: ${new Date(producto.updatedAt).toLocaleDateString()}
-                    </small>
-                </div>
-            `;
-            listaProductos.appendChild(div);
+                `;
+                listaProductos.appendChild(div);
+            });
+        }, error => {
+            console.error('Error al escuchar cambios en productos:', error);
+            listaProductos.innerHTML = `
+                <div class="alert alert-danger" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Error al cargar los productos. Por favor, intenta de nuevo más tarde.
+                </div>`;
+            mostrarAlerta('alertaError', 'Error al cargar los productos');
         });
+
     } catch (error) {
         console.error('Error al cargar productos:', error);
         const listaProductos = document.getElementById('listaProductos');
