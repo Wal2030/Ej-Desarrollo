@@ -332,134 +332,80 @@ async function verificarEmailExistente(email) {
     }
 }
 
+// Función para actualizar el rol de usuario a empresa
+async function actualizarRolAEmpresa(userId) {
+    try {
+        await firebase.firestore().collection('users').doc(userId).update({
+            role: 'empresa'
+        });
+        mostrarAlerta('alertaExito', 'Rol actualizado a empresa exitosamente');
+    } catch (error) {
+        console.error('Error al actualizar rol:', error);
+        mostrarAlerta('alertaError', 'Error al actualizar el rol del usuario');
+    }
+}
+
 // Función para registrar empresa
 async function registrarEmpresa(event) {
     event.preventDefault();
     
     try {
-        const email = getElement('emailEmpresa').value;
-        const password = getElement('passwordEmpresa').value;
-        const nombre = getElement('nombreEmpresa').value;
-        const ruc = getElement('ruc').value;
-        const direccion = getElement('direccion').value;
-        const telefono = getElement('telefono').value;
+        // Obtener valores del formulario
+        const email = document.getElementById('emailEmpresa').value;
+        const password = document.getElementById('passwordEmpresa').value;
+        const nombre = document.getElementById('nombreEmpresa').value;
+        const ruc = document.getElementById('rucEmpresa').value;
+        const direccion = document.getElementById('direccionEmpresa').value;
+        const telefono = document.getElementById('telefonoEmpresa').value;
+        const rucDoc = document.getElementById('rucDoc').files[0];
+        const licenciaDoc = document.getElementById('licenciaDoc').files[0];
 
-        console.log('Iniciando registro de empresa:', { email, nombre, ruc });
-
-        // Verificar si el email ya existe
-        const emailCheck = await verificarEmailExistente(email);
-        if (emailCheck.exists) {
-            let mensajeError = 'Este correo electrónico ya está registrado';
-            if (emailCheck.role) {
-                mensajeError += ` como ${emailCheck.role}`;
-            }
-            throw new Error(mensajeError);
+        // Validar campos requeridos
+        if (!email || !password || !nombre || !ruc || !direccion || !telefono || !rucDoc || !licenciaDoc) {
+            throw new Error('Por favor complete todos los campos y suba los documentos requeridos');
         }
 
         // Crear usuario en Authentication
         const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
         const user = userCredential.user;
-        console.log('Usuario creado:', user.uid);
 
-        try {
-            // Guardar datos en Firestore
-            console.log('Guardando datos en Firestore...');
-            const timestamp = new Date().toISOString();
-            
-            const userData = {
-                uid: user.uid,
-                email: email,
-                role: 'empresa',
-                createdAt: timestamp,
-                status: 'pending',
-                nombre: nombre,
-                tipo: 'empresa'
-            };
+        // Subir documentos a Storage
+        const rucUrl = await subirDocumento(rucDoc, `empresas/${user.uid}/ruc`);
+        const licenciaUrl = await subirDocumento(licenciaDoc, `empresas/${user.uid}/licencia`);
 
-            const empresaData = {
-                uid: user.uid,
-                nombre: nombre,
-                ruc: ruc,
-                direccion: direccion,
-                telefono: telefono,
-                email: email,
-                role: 'empresa',
-                status: 'pending',
-                createdAt: timestamp,
-                updatedAt: timestamp,
-                calificaciones: [],
-                promedioCalificacion: 0,
-                totalResenas: 0,
-                documentosVerificacion: {
-                    rucDoc: '',
-                    licenciaFuncionamiento: ''
-                }
-            };
+        // Crear documento de usuario
+        await firebase.firestore().collection('users').doc(user.uid).set({
+            email: email,
+            nombre: nombre,
+            role: 'empresa',
+            createdAt: new Date().toISOString()
+        });
 
-            // Guardar en ambas colecciones
-            await firebase.firestore().collection('users').doc(user.uid).set(userData);
-            await firebase.firestore().collection('empresas').doc(user.uid).set(empresaData);
-            console.log('Datos guardados exitosamente');
+        // Crear documento de empresa
+        await firebase.firestore().collection('empresas').doc(user.uid).set({
+            nombre: nombre,
+            ruc: ruc,
+            direccion: direccion,
+            telefono: telefono,
+            email: email,
+            rucUrl: rucUrl,
+            licenciaUrl: licenciaUrl,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        });
 
-            // Actualizar perfil
-            await user.updateProfile({
-                displayName: nombre
-            });
+        // Mostrar mensaje de éxito
+        mostrarAlerta('alertaExito', 'Empresa registrada exitosamente. Por favor espere la verificación.');
+        
+        // Redirigir después de 2 segundos
+        setTimeout(() => {
+            window.location.href = '/dashboard-empresa.html';
+        }, 2000);
 
-            // Actualizar claims personalizados para el rol de empresa
-            try {
-                // Crear una notificación para los administradores
-                await firebase.firestore().collection('notificaciones').add({
-                    tipo: 'nueva_empresa',
-                    titulo: 'Nueva Empresa Registrada',
-                    mensaje: `Se ha registrado una nueva empresa: ${nombre}`,
-                    destinatarioId: 'admin',
-                    createdAt: timestamp,
-                    leido: false,
-                    expiraEn: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
-                });
-            } catch (notifError) {
-                console.error('Error al crear notificación:', notifError);
-                // No interrumpir el flujo si falla la notificación
-            }
-
-            mostrarAlerta('alertaExito', '¡Registro exitoso! Redirigiendo al dashboard...');
-            
-            // Redirigir al dashboard de empresa
-            setTimeout(() => {
-                window.location.href = '/dashboard-empresa.html';
-            }, 2000);
-        } catch (error) {
-            // Si hay un error después de crear el usuario, eliminarlo
-            await user.delete();
-            throw error;
-        }
     } catch (error) {
-        console.error('Error detallado del registro:', error);
-        let mensajeError = 'Error al registrar. Por favor, intenta de nuevo.';
-        
-        if (error.code) {
-            switch (error.code) {
-                case 'auth/email-already-in-use':
-                    mensajeError = 'Este correo electrónico ya está registrado. Por favor, usa otro correo o inicia sesión.';
-                    break;
-                case 'auth/invalid-email':
-                    mensajeError = 'Correo electrónico inválido.';
-                    break;
-                case 'auth/operation-not-allowed':
-                    mensajeError = 'El registro de usuarios está deshabilitado temporalmente.';
-                    break;
-                case 'auth/weak-password':
-                    mensajeError = 'La contraseña debe tener al menos 6 caracteres.';
-                    break;
-                default:
-                    mensajeError = error.message;
-            }
-        } else {
-            mensajeError = error.message || 'Error desconocido al registrar empresa';
-        }
-        
-        mostrarAlerta('alertaError', mensajeError);
+        console.error('Error al registrar empresa:', error);
+        mostrarAlerta('alertaError', error.message);
     }
 }
 

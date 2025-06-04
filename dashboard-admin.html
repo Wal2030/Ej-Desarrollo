@@ -178,57 +178,58 @@
         // Función para cargar empresas pendientes
         async function cargarEmpresasPendientes() {
             try {
-                const empresas = await obtenerEmpresasPendientes();
-                const tbody = document.getElementById('empresasPendientesList');
-                
-                if (empresas.length === 0) {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="6" class="text-center">No hay empresas pendientes de verificación</td>
-                        </tr>
-                    `;
+                const snapshot = await firebase.firestore().collection('empresas')
+                    .where('status', '==', 'pending')
+                    .get();
+
+                const container = document.getElementById('empresasPendientes');
+                const template = document.getElementById('empresaPendienteTemplate');
+                container.innerHTML = '';
+
+                if (snapshot.empty) {
+                    container.innerHTML = '<div class="alert alert-info">No hay empresas pendientes de verificación</div>';
                     return;
                 }
 
-                tbody.innerHTML = empresas.map(empresa => `
-                    <tr>
-                        <td>${empresa.nombre}</td>
-                        <td>${empresa.ruc}</td>
-                        <td>${empresa.email}</td>
-                        <td>
-                            ${empresa.documentosVerificacion ? `
-                                ${empresa.documentosVerificacion.rucDoc ? `
-                                    <a href="${empresa.documentosVerificacion.rucDoc}" target="_blank" class="btn btn-sm btn-info">
-                                        <i class="fas fa-file-alt"></i> RUT
-                                    </a>
-                                ` : '<span class="badge bg-warning">Sin RUT</span>'}
-                                ${empresa.documentosVerificacion.licenciaFuncionamiento ? `
-                                    <a href="${empresa.documentosVerificacion.licenciaFuncionamiento}" target="_blank" class="btn btn-sm btn-info">
-                                        <i class="fas fa-file-alt"></i> Licencia
-                                    </a>
-                                ` : '<span class="badge bg-warning">Sin Licencia</span>'}
-                            ` : '<span class="badge bg-warning">Sin documentos</span>'}
-                        </td>
-                        <td>${new Date(empresa.createdAt).toLocaleDateString()}</td>
-                        <td>
-                            ${empresa.status === 'pending' ? `
-                                <button class="btn btn-success btn-sm" onclick="aprobarEmpresa('${empresa.id}')">
-                                    <i class="fas fa-check"></i>
-                                </button>
-                                <button class="btn btn-danger btn-sm" onclick="rechazarEmpresa('${empresa.id}')">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            ` : `
-                                <span class="badge ${empresa.status === 'verified' ? 'bg-success' : 'bg-danger'}">
-                                    ${empresa.status === 'verified' ? 'Verificada' : 'Rechazada'}
-                                </span>
-                            `}
-                        </td>
-                    </tr>
-                `).join('');
+                snapshot.forEach(doc => {
+                    const empresa = doc.data();
+                    const card = template.content.cloneNode(true);
+                    
+                    // Llenar datos básicos
+                    card.querySelector('.card-title').textContent = empresa.nombre;
+                    card.querySelector('.ruc').textContent = empresa.ruc;
+                    card.querySelector('.email').textContent = empresa.email;
+                    card.querySelector('.direccion').textContent = empresa.direccion;
+                    card.querySelector('.telefono').textContent = empresa.telefono;
+
+                    // Configurar botones
+                    card.querySelector('.verificar-btn').dataset.id = doc.id;
+                    card.querySelector('.actualizar-rol-btn').dataset.userId = doc.id;
+                    card.querySelector('.rechazar-btn').dataset.id = doc.id;
+
+                    // Configurar enlaces de documentos
+                    const rucLink = card.querySelector('.ver-ruc');
+                    const licenciaLink = card.querySelector('.ver-licencia');
+                    
+                    if (empresa.rucUrl) {
+                        rucLink.href = empresa.rucUrl;
+                        rucLink.target = '_blank';
+                    } else {
+                        rucLink.classList.add('disabled');
+                    }
+
+                    if (empresa.licenciaUrl) {
+                        licenciaLink.href = empresa.licenciaUrl;
+                        licenciaLink.target = '_blank';
+                    } else {
+                        licenciaLink.classList.add('disabled');
+                    }
+
+                    container.appendChild(card);
+                });
             } catch (error) {
-                mostrarAlerta('alertaError', 'Error al cargar empresas pendientes');
-                console.error(error);
+                console.error('Error al cargar empresas pendientes:', error);
+                mostrarAlerta('alertaError', 'Error al cargar las empresas pendientes');
             }
         }
 
