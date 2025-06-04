@@ -365,24 +365,20 @@ async function registrarEmpresa(event) {
         const email = getElement('emailEmpresa').value;
         const password = getElement('passwordEmpresa').value;
         const nombre = getElement('nombreEmpresa').value;
-        const ruc = getElement('rucEmpresa').value;
-        const direccion = getElement('direccionEmpresa').value;
-        const telefono = getElement('telefonoEmpresa').value;
-        const rucDoc = getElement('rucDoc').files[0];
-        const licenciaDoc = getElement('licenciaDoc').files[0];
+        const ruc = getElement('ruc').value;
+        const direccion = getElement('direccion').value;
+        const telefono = getElement('telefono').value;
+        const rucDoc = getElement('rucDoc')?.files[0];
+        const licenciaDoc = getElement('licenciaDoc')?.files[0];
 
         // Validar campos requeridos
-        if (!email || !password || !nombre || !ruc || !direccion || !telefono || !rucDoc || !licenciaDoc) {
-            throw new Error('Por favor complete todos los campos y suba los documentos requeridos');
+        if (!email || !password || !nombre || !ruc || !direccion || !telefono) {
+            throw new Error('Por favor complete todos los campos del formulario');
         }
 
         // Crear usuario en Authentication
         const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
         const user = userCredential.user;
-
-        // Subir documentos a Storage
-        const rucUrl = await subirDocumento(rucDoc, `empresas/${user.uid}/ruc`);
-        const licenciaUrl = await subirDocumento(licenciaDoc, `empresas/${user.uid}/licencia`);
 
         // Crear documento de usuario
         await firebase.firestore().collection('users').doc(user.uid).set({
@@ -393,18 +389,26 @@ async function registrarEmpresa(event) {
         });
 
         // Crear documento de empresa
-        await firebase.firestore().collection('empresas').doc(user.uid).set({
+        const empresaData = {
             nombre: nombre,
             ruc: ruc,
             direccion: direccion,
             telefono: telefono,
             email: email,
-            rucUrl: rucUrl,
-            licenciaUrl: licenciaUrl,
             status: 'pending',
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
-        });
+        };
+
+        // Si hay documentos, subirlos
+        if (rucDoc) {
+            empresaData.rucUrl = await subirDocumento(rucDoc, `empresas/${user.uid}/ruc`);
+        }
+        if (licenciaDoc) {
+            empresaData.licenciaUrl = await subirDocumento(licenciaDoc, `empresas/${user.uid}/licencia`);
+        }
+
+        await firebase.firestore().collection('empresas').doc(user.uid).set(empresaData);
 
         mostrarAlerta('alertaExito', 'Empresa registrada exitosamente. Por favor espere la verificación.');
         
