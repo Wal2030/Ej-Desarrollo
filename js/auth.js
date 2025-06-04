@@ -345,6 +345,18 @@ async function actualizarRolAEmpresa(userId) {
     }
 }
 
+// Función para mostrar el estado de la empresa en español
+function mostrarEstadoEmpresa(status) {
+    switch (status) {
+        case 'verified':
+            return 'Verificada';
+        case 'pending':
+            return 'Pendiente';
+        default:
+            return 'Rechazada';
+    }
+}
+
 // Función para registrar empresa
 async function registrarEmpresa(event) {
     event.preventDefault();
