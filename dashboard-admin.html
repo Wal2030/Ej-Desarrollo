@@ -191,43 +191,75 @@
         // Función para cargar todas las empresas
         async function cargarTodasEmpresas() {
             try {
+                const tbody = document.getElementById('todasEmpresasList');
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center">Cargando...</td></tr>';
+
                 let query = firebase.firestore().collection('empresas');
                 
                 if (filtroActual !== 'all') {
                     query = query.where('status', '==', filtroActual);
                 }
                 
-                const snapshot = await query.orderBy('updatedAt', 'desc').get();
-
-                const tbody = document.getElementById('todasEmpresasList');
-                
-                if (snapshot.empty) {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="6" class="text-center">No hay empresas para mostrar</td>
-                        </tr>
-                    `;
-                    return;
+                // Primero intentar con updatedAt
+                try {
+                    const snapshot = await query.orderBy('updatedAt', 'desc').get();
+                    mostrarResultadosEmpresas(snapshot, tbody);
+                } catch (orderError) {
+                    console.warn('Error al ordenar por updatedAt, intentando con createdAt:', orderError);
+                    // Si falla, intentar con createdAt
+                    try {
+                        const snapshot = await query.orderBy('createdAt', 'desc').get();
+                        mostrarResultadosEmpresas(snapshot, tbody);
+                    } catch (secondError) {
+                        console.error('Error al ordenar por createdAt:', secondError);
+                        // Si ambos fallan, mostrar sin ordenar
+                        const snapshot = await query.get();
+                        mostrarResultadosEmpresas(snapshot, tbody);
+                    }
                 }
-
-                tbody.innerHTML = '';
-                snapshot.forEach(doc => {
-                    const empresa = doc.data();
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${empresa.nombre}</td>
-                        <td>${empresa.ruc}</td>
-                        <td>${empresa.email}</td>
-                        <td>${mostrarEstadoEmpresa(empresa.status)}</td>
-                        <td>${new Date(empresa.updatedAt).toLocaleDateString()}</td>
-                        <td>${empresa.motivoRechazo || '-'}</td>
-                    `;
-                    tbody.appendChild(row);
-                });
             } catch (error) {
                 console.error('Error al cargar empresas:', error);
-                mostrarAlerta('alertaError', 'Error al cargar el historial de empresas');
+                mostrarAlerta('alertaError', 'Error al cargar el historial de empresas. Por favor, intente de nuevo.');
+                
+                // Mostrar mensaje de error en la tabla
+                const tbody = document.getElementById('todasEmpresasList');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Error al cargar las empresas. Por favor, recargue la página.
+                        </td>
+                    </tr>
+                `;
             }
+        }
+
+        // Función auxiliar para mostrar los resultados de empresas
+        function mostrarResultadosEmpresas(snapshot, tbody) {
+            if (snapshot.empty) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center">No hay empresas para mostrar</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = '';
+            snapshot.forEach(doc => {
+                const empresa = doc.data();
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${empresa.nombre || 'Sin nombre'}</td>
+                    <td>${empresa.ruc || 'Sin RUT'}</td>
+                    <td>${empresa.email || 'Sin email'}</td>
+                    <td>${mostrarEstadoEmpresa(empresa.status)}</td>
+                    <td>${empresa.updatedAt ? new Date(empresa.updatedAt).toLocaleDateString() : 
+                         empresa.createdAt ? new Date(empresa.createdAt).toLocaleDateString() : 'Fecha desconocida'}</td>
+                    <td>${empresa.motivoRechazo || '-'}</td>
+                `;
+                tbody.appendChild(row);
+            });
         }
 
         // Función para filtrar empresas
