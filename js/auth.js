@@ -352,8 +352,10 @@ function mostrarEstadoEmpresa(status) {
             return 'Verificada';
         case 'pending':
             return 'Pendiente';
-        default:
+        case 'rejected':
             return 'Rechazada';
+        default:
+            return 'Desconocido';
     }
 }
 

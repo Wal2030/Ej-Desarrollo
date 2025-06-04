@@ -89,6 +89,37 @@
                 </div>
             </div>
         </div>
+
+        <!-- Lista de Todas las Empresas -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h3>Historial de Empresas</h3>
+                <div class="btn-group">
+                    <button class="btn btn-outline-primary" onclick="filtrarEmpresas('all')">Todas</button>
+                    <button class="btn btn-outline-success" onclick="filtrarEmpresas('verified')">Verificadas</button>
+                    <button class="btn btn-outline-danger" onclick="filtrarEmpresas('rejected')">Rechazadas</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>RUT</th>
+                                <th>Email</th>
+                                <th>Estado</th>
+                                <th>Fecha</th>
+                                <th>Motivo Rechazo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="todasEmpresasList">
+                            <!-- Las empresas se cargarán dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Modal de Rechazo -->
@@ -124,6 +155,7 @@
     <script>
         let empresaSeleccionada = null;
         const modalRechazo = new bootstrap.Modal(document.getElementById('modalRechazo'));
+        let filtroActual = 'all';
 
         // Verificar que el usuario sea admin
         firebase.auth().onAuthStateChanged(async (user) => {
@@ -136,10 +168,73 @@
                 
                 document.querySelector('#nombreUsuario span').textContent = user.displayName || user.email;
                 cargarEmpresasPendientes();
+                cargarTodasEmpresas();
             } else {
                 window.location.href = '/login.html';
             }
         });
+
+        // Función para mostrar el estado en español
+        function mostrarEstadoEmpresa(status) {
+            switch (status) {
+                case 'verified':
+                    return '<span class="badge bg-success">Verificada</span>';
+                case 'pending':
+                    return '<span class="badge bg-warning">Pendiente</span>';
+                case 'rejected':
+                    return '<span class="badge bg-danger">Rechazada</span>';
+                default:
+                    return '<span class="badge bg-secondary">Desconocido</span>';
+            }
+        }
+
+        // Función para cargar todas las empresas
+        async function cargarTodasEmpresas() {
+            try {
+                let query = firebase.firestore().collection('empresas');
+                
+                if (filtroActual !== 'all') {
+                    query = query.where('status', '==', filtroActual);
+                }
+                
+                const snapshot = await query.orderBy('updatedAt', 'desc').get();
+
+                const tbody = document.getElementById('todasEmpresasList');
+                
+                if (snapshot.empty) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center">No hay empresas para mostrar</td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const empresa = doc.data();
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${empresa.nombre}</td>
+                        <td>${empresa.ruc}</td>
+                        <td>${empresa.email}</td>
+                        <td>${mostrarEstadoEmpresa(empresa.status)}</td>
+                        <td>${new Date(empresa.updatedAt).toLocaleDateString()}</td>
+                        <td>${empresa.motivoRechazo || '-'}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            } catch (error) {
+                console.error('Error al cargar empresas:', error);
+                mostrarAlerta('alertaError', 'Error al cargar el historial de empresas');
+            }
+        }
+
+        // Función para filtrar empresas
+        function filtrarEmpresas(filtro) {
+            filtroActual = filtro;
+            cargarTodasEmpresas();
+        }
 
         // Función para cargar empresas pendientes
         async function cargarEmpresasPendientes() {
@@ -205,13 +300,30 @@
         // Función para verificar empresa
         async function verificarEmpresa(empresaId) {
             try {
+                // Actualizar estado de la empresa
                 await firebase.firestore().collection('empresas').doc(empresaId).update({
                     status: 'verified',
                     updatedAt: new Date().toISOString()
                 });
 
+                // Actualizar rol del usuario a 'empresa'
+                await firebase.firestore().collection('users').doc(empresaId).update({
+                    role: 'empresa'
+                });
+
+                // Crear notificación
+                await firebase.firestore().collection('notificaciones').add({
+                    destinatarioId: empresaId,
+                    titulo: '¡Empresa Verificada!',
+                    mensaje: 'Su empresa ha sido verificada exitosamente. Ya puede comenzar a usar la plataforma.',
+                    tipo: 'success',
+                    leido: false,
+                    createdAt: new Date().toISOString()
+                });
+
                 mostrarAlerta('alertaExito', 'Empresa verificada exitosamente');
                 cargarEmpresasPendientes();
+                cargarTodasEmpresas();
             } catch (error) {
                 console.error('Error al verificar empresa:', error);
                 mostrarAlerta('alertaError', 'Error al verificar la empresa');
@@ -232,19 +344,31 @@
                     throw new Error('Por favor, ingresa un motivo de rechazo');
                 }
 
+                // Actualizar estado de la empresa
                 await firebase.firestore().collection('empresas').doc(empresaSeleccionada).update({
                     status: 'rejected',
                     motivoRechazo: motivo,
                     updatedAt: new Date().toISOString()
                 });
 
+                // Crear notificación
+                await firebase.firestore().collection('notificaciones').add({
+                    destinatarioId: empresaSeleccionada,
+                    titulo: 'Verificación Rechazada',
+                    mensaje: `Su solicitud ha sido rechazada. Motivo: ${motivo}`,
+                    tipo: 'error',
+                    leido: false,
+                    createdAt: new Date().toISOString()
+                });
+
                 modalRechazo.hide();
                 document.getElementById('motivoRechazo').value = '';
                 mostrarAlerta('alertaExito', 'Empresa rechazada exitosamente');
                 cargarEmpresasPendientes();
+                cargarTodasEmpresas();
             } catch (error) {
                 console.error('Error al rechazar empresa:', error);
-                mostrarAlerta('alertaError', 'Error al rechazar la empresa');
+                mostrarAlerta('alertaError', error.message);
             }
         }
 
