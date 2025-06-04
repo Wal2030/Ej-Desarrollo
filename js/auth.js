@@ -468,4 +468,76 @@ function togglePasswordEmpresa() {
             icon.classList.add('fa-eye');
         }
     }
+}
+
+// Función para crear notificación
+async function crearNotificacion(destinatarioId, titulo, mensaje, tipo) {
+    try {
+        await firebase.firestore().collection('notificaciones').add({
+            destinatarioId: destinatarioId,
+            titulo: titulo,
+            mensaje: mensaje,
+            tipo: tipo,
+            leido: false,
+            createdAt: new Date().toISOString()
+        });
+    } catch (error) {
+        console.error('Error al crear notificación:', error);
+    }
+}
+
+// Función para verificar empresa
+async function verificarEmpresa(empresaId) {
+    try {
+        await firebase.firestore().collection('empresas').doc(empresaId).update({
+            status: 'verified',
+            updatedAt: new Date().toISOString()
+        });
+
+        // Crear notificación de verificación
+        await crearNotificacion(
+            empresaId,
+            '¡Empresa Verificada!',
+            'Su empresa ha sido verificada exitosamente. Ya puede comenzar a usar la plataforma.',
+            'success'
+        );
+
+        mostrarAlerta('alertaExito', 'Empresa verificada exitosamente');
+        cargarEmpresasPendientes();
+    } catch (error) {
+        console.error('Error al verificar empresa:', error);
+        mostrarAlerta('alertaError', 'Error al verificar la empresa');
+    }
+}
+
+// Función para confirmar rechazo
+async function confirmarRechazo() {
+    try {
+        const motivo = document.getElementById('motivoRechazo').value;
+        if (!motivo) {
+            throw new Error('Por favor, ingresa un motivo de rechazo');
+        }
+
+        await firebase.firestore().collection('empresas').doc(empresaSeleccionada).update({
+            status: 'rejected',
+            motivoRechazo: motivo,
+            updatedAt: new Date().toISOString()
+        });
+
+        // Crear notificación de rechazo
+        await crearNotificacion(
+            empresaSeleccionada,
+            'Verificación Rechazada',
+            `Su solicitud ha sido rechazada. Motivo: ${motivo}`,
+            'error'
+        );
+
+        modalRechazo.hide();
+        document.getElementById('motivoRechazo').value = '';
+        mostrarAlerta('alertaExito', 'Empresa rechazada exitosamente');
+        cargarEmpresasPendientes();
+    } catch (error) {
+        console.error('Error al rechazar empresa:', error);
+        mostrarAlerta('alertaError', error.message);
+    }
 } 
