@@ -350,39 +350,18 @@ async function registrarEmpresa(event) {
     event.preventDefault();
     
     try {
-        // Obtener elementos del formulario
-        const emailInput = document.getElementById('emailEmpresa');
-        const passwordInput = document.getElementById('passwordEmpresa');
-        const nombreInput = document.getElementById('nombreEmpresa');
-        const rucInput = document.getElementById('rucEmpresa');
-        const direccionInput = document.getElementById('direccionEmpresa');
-        const telefonoInput = document.getElementById('telefonoEmpresa');
-        const rucDocInput = document.getElementById('rucDoc');
-        const licenciaDocInput = document.getElementById('licenciaDoc');
-
-        // Verificar que todos los elementos existan
-        if (!emailInput || !passwordInput || !nombreInput || !rucInput || 
-            !direccionInput || !telefonoInput || !rucDocInput || !licenciaDocInput) {
-            throw new Error('Error al encontrar los elementos del formulario');
-        }
-
-        // Obtener valores
-        const email = emailInput.value.trim();
-        const password = passwordInput.value;
-        const nombre = nombreInput.value.trim();
-        const ruc = rucInput.value.trim();
-        const direccion = direccionInput.value.trim();
-        const telefono = telefonoInput.value.trim();
-        const rucDoc = rucDocInput.files[0];
-        const licenciaDoc = licenciaDocInput.files[0];
+        const email = getElement('emailEmpresa').value;
+        const password = getElement('passwordEmpresa').value;
+        const nombre = getElement('nombreEmpresa').value;
+        const ruc = getElement('rucEmpresa').value;
+        const direccion = getElement('direccionEmpresa').value;
+        const telefono = getElement('telefonoEmpresa').value;
+        const rucDoc = getElement('rucDoc').files[0];
+        const licenciaDoc = getElement('licenciaDoc').files[0];
 
         // Validar campos requeridos
-        if (!email || !password || !nombre || !ruc || !direccion || !telefono) {
-            throw new Error('Por favor complete todos los campos');
-        }
-
-        if (!rucDoc || !licenciaDoc) {
-            throw new Error('Por favor suba los documentos requeridos (RUT y Licencia)');
+        if (!email || !password || !nombre || !ruc || !direccion || !telefono || !rucDoc || !licenciaDoc) {
+            throw new Error('Por favor complete todos los campos y suba los documentos requeridos');
         }
 
         // Crear usuario en Authentication
@@ -415,10 +394,8 @@ async function registrarEmpresa(event) {
             updatedAt: new Date().toISOString()
         });
 
-        // Mostrar mensaje de éxito
         mostrarAlerta('alertaExito', 'Empresa registrada exitosamente. Por favor espere la verificación.');
         
-        // Redirigir después de 2 segundos
         setTimeout(() => {
             window.location.href = '/dashboard-empresa.html';
         }, 2000);
